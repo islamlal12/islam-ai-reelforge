@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Automated Word-Level Arabic Transcription & Stutter Filter for Islam AI ReelForge.
-Uses Whisper large-v3-turbo with word-level timestamps and auto-detects stutter/false starts.
+"""Automated Word-Level Arabic Transcription & Stutter Filter for AI Video Editor.
+Defaults to high-tier large model (large-v3-turbo) and allows dynamic agent/user model selection.
 """
-import os, sys, json, subprocess, re
+import os, sys, json, subprocess, re, argparse
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -10,13 +10,26 @@ try:
 except Exception:
     pass
 
-def get_whisper_model():
-    custom_path = os.environ.get("WHISPER_MODEL_PATH")
-    if custom_path and os.path.exists(custom_path):
-        return custom_path
-    islam_default = r"C:\Users\PC\.cache\whisper\large-v3-turbo.pt"
-    if os.path.exists(islam_default):
-        return islam_default
+def get_whisper_model(requested_model=None):
+    if requested_model:
+        if os.path.exists(requested_model):
+            return requested_model
+        return requested_model
+
+    custom_env = os.environ.get("WHISPER_MODEL") or os.environ.get("WHISPER_MODEL_PATH")
+    if custom_env:
+        return custom_env
+
+    # Check local cache for high-tier large models if already present
+    local_cache_turbo = os.path.expanduser(r"~/.cache/whisper/large-v3-turbo.pt")
+    local_pc_turbo = r"C:\Users\PC\.cache\whisper\large-v3-turbo.pt"
+    local_cache_large = os.path.expanduser(r"~/.cache/whisper/large-v3.pt")
+
+    for path in [local_pc_turbo, local_cache_turbo, local_cache_large]:
+        if os.path.exists(path):
+            return path
+
+    # Default to high-tier large model (Whisper downloads it dynamically on first run)
     return "large-v3-turbo"
 
 def remove_arabic_stutters(segments):
@@ -41,7 +54,7 @@ def remove_arabic_stutters(segments):
                 next_w = words[i+1]
                 next_text = re.sub(r'[^\w\s]', '', next_w.get("word", "").strip())
                 if curr_text and curr_text == next_text:
-                    # Duplicate stutter detected! Keep the second occurrence (which is usually the confident one)
+                    # Duplicate stutter detected! Keep the second occurrence
                     total_stutters_removed += 1
                     i += 1
                     continue
@@ -56,7 +69,7 @@ def remove_arabic_stutters(segments):
         print(f"✨ Auto-cleaned {total_stutters_removed} duplicate words/stutters from transcription.")
     return clean_segments
 
-def transcribe(work_dir, audio_file=None):
+def transcribe(work_dir, audio_file=None, model_choice=None):
     work_dir = os.path.abspath(work_dir)
     if not audio_file:
         audio_file = os.path.join(work_dir, "a.wav")
@@ -67,8 +80,8 @@ def transcribe(work_dir, audio_file=None):
         print(f"❌ Error: Audio file {audio_file} not found.")
         sys.exit(1)
         
-    model = get_whisper_model()
-    print(f"🎙️ Transcribing with Whisper ({model})...", flush=True)
+    model = get_whisper_model(model_choice)
+    print(f"🎙️ Transcribing with Whisper model [{model}]...", flush=True)
     
     out_json = os.path.join(work_dir, "a.json")
     whisper_log = os.path.join(work_dir, "whisper.log")
@@ -113,5 +126,8 @@ def transcribe(work_dir, audio_file=None):
         print(f"✅ Generated baseline fixes.json")
 
 if __name__ == "__main__":
-    work = sys.argv[1] if len(sys.argv) > 1 else "."
-    transcribe(work)
+    parser = argparse.ArgumentParser(description="Transcribe audio with Whisper")
+    parser.add_argument("work_dir", nargs="?", default=".", help="Workspace directory")
+    parser.add_argument("--model", choices=["large-v3", "large-v3-turbo", "medium", "small", "base"], default=None, help="Whisper model tier")
+    args = parser.parse_args()
+    transcribe(args.work_dir, model_choice=args.model)

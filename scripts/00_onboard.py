@@ -39,7 +39,7 @@ LOGO_EXT = {"image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp", "i
 
 # نفس لوحات الصفحة — لو وصل palette بلا colors نرجع لها
 PALETTES = {
-    "islamai":      dict(bg="#0C68E9", ink="#FFFFFF", acc="#F97316", clay="#60A5FA", mut="#EFF6FF"),
+    "slate-cyan":   dict(bg="#0F172A", ink="#F8FAFC", acc="#38BDF8", clay="#0284C7", mut="#94A3B8"),
     "night-gold":   dict(bg="#101828", ink="#F5F7FA", acc="#F2B33D", clay="#C98B18", mut="#98A2B3"),
     "paper-indigo": dict(bg="#F7F8FC", ink="#111827", acc="#3B5BFD", clay="#2A3FC0", mut="#6B7280"),
     "coal-lime":    dict(bg="#0E0F0C", ink="#F4F4EF", acc="#C6F432", clay="#93B51F", mut="#8C8F85"),
@@ -331,7 +331,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(400, {"ok": False, "error": str(e)})
         self._send(200, {"ok": True})
         self.server.result = (obj, paths)
-        threading.Thread(target=self.server.shutdown, daemon=True).start()
+        if not getattr(self.server, "keep_alive", False):
+            threading.Thread(target=self.server.shutdown, daemon=True).start()
 
 
 def serve(args):
@@ -339,6 +340,7 @@ def serve(args):
     port = 0
     do_open = True
     timeout = 1800
+    keep_alive = False
     mode = None
     i = 0
     while i < len(args):
@@ -353,12 +355,14 @@ def serve(args):
             do_open = False
         elif a == "--timeout":
             timeout = int(args[i + 1]); i += 1
+        elif a == "--keep-alive":
+            keep_alive = True
         i += 1
     if not PAGE.exists():
         log("⛔ ما لقيت الصفحة:", PAGE)
         return 1
     srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    srv.work, srv.result = work, None
+    srv.work, srv.result, srv.keep_alive = work, None, keep_alive
     url = "http://127.0.0.1:%d/" % srv.server_address[1]
     if mode:
         url += "?mode=" + mode
@@ -368,14 +372,17 @@ def serve(args):
             webbrowser.open(url)
         except Exception:
             pass
-    timer = threading.Timer(timeout, srv.shutdown)
-    timer.daemon = True
-    timer.start()
+    timer = None
+    if timeout > 0 and not keep_alive:
+        timer = threading.Timer(timeout, srv.shutdown)
+        timer.daemon = True
+        timer.start()
     try:
         srv.serve_forever(poll_interval=0.3)
     except KeyboardInterrupt:
         pass
-    timer.cancel()
+    if timer:
+        timer.cancel()
     srv.server_close()
     if not srv.result:
         log("⏱️ خلص الوقت وما وصل شي — المستخدم ما ضغط حفظ.")

@@ -90,7 +90,7 @@ def main():
     if os.path.exists(tp) and "--force" not in sys.argv:
         print("⚠️ فيه theme.json من قبل — ما لمسته. (--force لو طلب تغييره صراحة)"); sys.exit(4)
     theme, dark = pick(kmeans(pixels(imgs)), mode)
-    full = {**theme, "font": "Readex Pro", "grade": False, "faceAnchor": 0.30, "badgeUntil": 0, "capStyle": "big",
+    full = {**theme, "font": "Cairo", "grade": False, "faceAnchor": 0.30, "badgeUntil": 0, "capStyle": "card",
             "refs": [os.path.basename(p) for p in imgs]}
     json.dump(full, open(tp, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     sheet(imgs, theme, os.path.join(work, "refs_palette.jpg"))

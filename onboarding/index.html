@@ -3,69 +3,100 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ذوقك بالفيديو</title>
-<meta name="description" content="أول ما يشتغل سكل الفيديو: اختار ألوانك وخطك وشكل الكابشن والإيقاع — أو اكتب اللي تبيه وتخطّ الباقي.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%234F46E5%22/%3E%3Cpath d=%22M12 9l11 7-11 7z%22 fill=%22white%22/%3E%3C/svg%3E">
+<title>إعدادات استوديو المونتاج الذكي</title>
+<meta name="description" content="استوديو إعداد ذوقك وهوية فيديوهاتك: اختر ألوانك، خطك، وشكل الكابشن بدقيقة واحدة.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%230284C7%22/%3E%3Cpath d=%22M12 9l11 7-11 7z%22 fill=%22white%22/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Cairo:wght@400;700;900&family=Tajawal:wght@400;700;900&family=Noto+Kufi+Arabic:wght@400;700;900&family=Readex+Pro:wght@400;700&family=Almarai:wght@400;700;800&family=Lalezar&family=Changa:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
-/* ── ألوان الصفحة نفسها (مو ألوان الفيديو) — محايدة، لا هوية أحد ── */
+/* ── ألوان الصفحة الأساسية (هادئة، محايدة، وعصرية) ── */
 :root{
-  --bg:#F6F6F4; --surface:#FFFFFF; --surface2:#EFEFEC; --line:#E2E2DD; --ink:#16161A; --ink2:#55555E; --ink3:#8A8A93;
-  --acc:#4F46E5; --acc-ink:#FFFFFF; --acc-soft:rgba(79,70,229,.10); --ok:#10B981; --shadow:0 1px 2px rgba(0,0,0,.05),0 8px 24px rgba(0,0,0,.05);
-  --r:16px; --r-sm:11px;
-  /* ألوان المعاينة = ألوان الفيديو اللي اختارها (تتغيّر مع اختياره) */
-  --p-bg:#101828; --p-ink:#F5F7FA; --p-acc:#F2B33D; --p-on:#101828; --p-font:'Cairo';
-  color-scheme:light;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0E0E11; --surface:#17171C; --surface2:#1F1F26; --line:#2A2A33; --ink:#F2F2F5; --ink2:#A9A9B5; --ink3:#72727E;
-    --acc:#8B85FF; --acc-ink:#0E0E11; --acc-soft:rgba(139,133,255,.14); --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
-    color-scheme:dark;
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#0E0E11; --surface:#17171C; --surface2:#1F1F26; --line:#2A2A33; --ink:#F2F2F5; --ink2:#A9A9B5; --ink3:#72727E;
-  --acc:#8B85FF; --acc-ink:#0E0E11; --acc-soft:rgba(139,133,255,.14); --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+  --bg:#0B0F19; --surface:#111827; --surface2:#1F2937; --line:#374151; --ink:#F8FAFC; --ink2:#94A3B8; --ink3:#64748B;
+  --acc:#38BDF8; --acc-ink:#0F172A; --acc-soft:rgba(56,189,248,.12); --ok:#10B981; --shadow:0 4px 20px rgba(0,0,0,.25);
+  --r:18px; --r-sm:12px;
+  /* ألوان المعاينة الافتراضية = رمادي وسماوي عصري */
+  --p-bg:#0F172A; --p-ink:#F8FAFC; --p-acc:#38BDF8; --p-on:#0F172A; --p-font:'Cairo';
   color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#F8FAFC; --surface:#FFFFFF; --surface2:#F1F5F9; --line:#E2E8F0; --ink:#0F172A; --ink2:#475569; --ink3:#64748B;
+  --acc:#0284C7; --acc-ink:#FFFFFF; --acc-soft:rgba(2,132,199,.12); --ok:#10B981; --shadow:0 4px 20px rgba(0,0,0,.06);
+  color-scheme:light;
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans Arabic',system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif;
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Cairo','IBM Plex Sans Arabic',system-ui,sans-serif;
   font-size:15px;line-height:1.6;padding-bottom:110px;overflow-x:hidden}
 .wrap{max-width:980px;margin:0 auto;padding:0 16px}
 button,input,textarea{font:inherit;color:inherit}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 /* ── الرأس ── */
-header{padding:28px 0 8px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
-h1{font-size:clamp(24px,4.4vw,34px);line-height:1.25;margin:0 0 6px;font-weight:700;letter-spacing:-.01em}
-.lead{color:var(--ink2);margin:0;max-width:560px}
-.iconbtn{flex:none;width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer}
+header{padding:32px 0 12px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+h1{font-size:clamp(24px,4vw,32px);line-height:1.25;margin:0 0 6px;font-weight:900;letter-spacing:-.01em}
+.lead{color:var(--ink2);margin:0;max-width:580px;font-size:15px}
+.iconbtn{flex:none;width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer;color:var(--ink);transition:all .2s ease}
+.iconbtn:hover{border-color:var(--acc);color:var(--acc)}
 .iconbtn svg{width:20px;height:20px}
 
+/* ── التصميم المكتبي المنقسم (Desktop Studio Layout) ── */
+.studio-layout{display:block}
+.studio-aside{display:none}
+
+@media (min-width: 980px){
+  .wrap{max-width:1240px;padding:0 32px}
+  header{border-bottom:1px solid var(--line);padding-bottom:24px;margin-bottom:10px}
+  .studio-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:36px;align-items:start}
+  .studio-main{min-width:0}
+  .studio-aside{display:block;position:sticky;top:24px;z-index:10}
+  .sticky-preview-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px;
+    box-shadow:0 12px 36px rgba(0,0,0,.15);display:flex;flex-direction:column;gap:16px
+  }
+  .preview-top{display:flex;align-items:center;justify-content:space-between}
+  .preview-title{font-size:14px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px}
+  .preview-badge{background:var(--acc-soft);color:var(--acc);font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;letter-spacing:.03em}
+  .phone-frame{
+    aspect-ratio:9/14;border-radius:18px;overflow:hidden;position:relative;border:3px solid var(--line);
+    background:radial-gradient(60% 42% at 50% 36%,rgba(255,255,255,.12),transparent 70%),
+               linear-gradient(180deg,#1e293b 0%,#0f172a 60%,#020617 100%);
+    box-shadow:0 16px 36px rgba(0,0,0,.3);
+  }
+  .phone-frame .phone{width:100%;height:100%;aspect-ratio:auto;border-radius:0}
+  .preview-info{
+    font-size:12.5px;color:var(--ink2);line-height:1.6;background:var(--surface2);
+    padding:12px 14px;border-radius:12px;border:1px solid var(--line);display:flex;flex-direction:column;gap:6px
+  }
+  .preview-info-row{display:flex;justify-content:space-between;align-items:center}
+  .preview-info-row strong{color:var(--ink)}
+  section.q{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px;margin-top:20px;box-shadow:0 2px 12px rgba(0,0,0,.03)}
+  section.q:hover{border-color:color-mix(in srgb, var(--line) 60%, var(--acc))}
+  .quick{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 4px 16px rgba(0,0,0,.04)}
+}
+
 /* ── الطريق السريع ── */
-.quick{margin:18px 0 8px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
+.quick{margin:18px 0 8px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow)}
 .quick label{display:block;font-weight:700;margin-bottom:8px}
 .quick textarea{width:100%;min-height:84px;resize:vertical;border:1px solid var(--line);background:var(--surface2);border-radius:var(--r-sm);padding:12px 14px;line-height:1.7;outline:none}
 .quick textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-soft)}
-.quick .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:10px}
+.quick .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:12px}
 .quick .hint{color:var(--ink3);font-size:13px}
 .cwarn{margin:10px 0 0;font-size:13px;color:#B45309;background:rgba(245,158,11,.12);border-radius:10px;padding:8px 12px}
-.btn{border:0;border-radius:12px;padding:11px 18px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.btn{border:0;border-radius:12px;padding:11px 18px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;transition:all .15s ease}
 .btn-ghost{background:var(--surface2);color:var(--ink);border:1px solid var(--line)}
+.btn-ghost:hover{border-color:var(--acc);color:var(--acc)}
 .btn-pri{background:var(--acc);color:var(--acc-ink)}
+.btn-pri:hover{filter:brightness(1.08);transform:translateY(-1px)}
 .btn:focus-visible,.opt:focus-within,.iconbtn:focus-visible{outline:3px solid var(--acc-soft);outline-offset:2px}
 
 /* ── الأقسام ── */
-section.q{margin-top:26px}
+section.q{margin-top:24px}
 .qh{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
-.qn{flex:none;width:26px;height:26px;border-radius:8px;background:var(--surface2);border:1px solid var(--line);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--ink2);transform:translateY(3px)}
+.qn{flex:none;width:28px;height:28px;border-radius:8px;background:var(--surface2);border:1px solid var(--line);display:grid;place-items:center;font-size:12px;font-weight:800;color:var(--ink2);transform:translateY(3px)}
 section.q.done .qn{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
-h2{font-size:18px;margin:0;font-weight:700}
-.qs{color:var(--ink3);font-size:13px;margin:0 36px 12px 0}
+h2{font-size:18px;margin:0;font-weight:800}
+.qs{color:var(--ink3);font-size:13px;margin:0 38px 14px 0}
 .sub{font-weight:700;font-size:14px;margin:16px 0 8px;color:var(--ink2)}
 
 /* الخيار العام */
@@ -81,9 +112,9 @@ h2{font-size:18px;margin:0;font-weight:700}
 .d{color:var(--ink3);font-size:12.5px;display:block;line-height:1.5}
 
 .grid{display:grid;gap:10px}
-.g-pal{grid-template-columns:repeat(auto-fill,minmax(132px,1fr))}
+.g-pal{grid-template-columns:repeat(auto-fill,minmax(136px,1fr))}
 .g-font{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
-.g-cap{grid-template-columns:repeat(auto-fill,minmax(118px,1fr))}
+.g-cap{grid-template-columns:repeat(auto-fill,minmax(124px,1fr))}
 .g-3{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
 .g-2{grid-template-columns:repeat(2,minmax(0,250px))}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -98,8 +129,8 @@ h2{font-size:18px;margin:0;font-weight:700}
 
 /* تبويبات الهوية */
 .tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
-.tab{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;cursor:pointer;font-weight:500}
-.tab[aria-selected="true"]{border-color:var(--acc);background:var(--acc-soft);font-weight:700}
+.tab{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;cursor:pointer;font-weight:500;color:var(--ink)}
+.tab[aria-selected="true"]{border-color:var(--acc);background:var(--acc-soft);font-weight:700;color:var(--acc)}
 .panel[hidden]{display:none}
 
 /* لوحات الألوان */
@@ -134,7 +165,7 @@ h2{font-size:18px;margin:0;font-weight:700}
 .fontc .n{display:flex;justify-content:space-between;color:var(--ink3);font-size:12px}
 .fontc.auto .s{font-family:inherit;font-size:16px;color:var(--ink2);padding:9px 0}
 
-/* معاينات الكابشن — نفس ستايلات المحرّك (capStyle) */
+/* معاينات الكابشن */
 .capc{padding:8px}
 .phone{display:block;aspect-ratio:9/13;border-radius:10px;overflow:hidden;position:relative;background:
    radial-gradient(60% 42% at 50% 36%,rgba(255,255,255,.18),transparent 70%),
@@ -247,113 +278,6 @@ h2{font-size:18px;margin:0;font-weight:700}
 .toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:40;max-width:calc(100% - 32px);text-align:center}
 .toast.show{opacity:1}
 
-/* ── بطاقة قالب إسلام آي الذكي (Smart Preset) ── */
-.smart-preset{
-  position:relative;
-  margin:18px 0 14px;
-  background:linear-gradient(135deg, rgba(12,104,233,0.08) 0%, rgba(249,115,22,0.06) 100%), var(--surface);
-  border:2px solid #0C68E9;
-  border-radius:var(--r);
-  padding:16px 20px;
-  box-shadow:0 4px 20px rgba(12,104,233,0.12);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:18px;
-  transition:all .25s ease;
-}
-.smart-preset:hover{
-  box-shadow:0 6px 24px rgba(12,104,233,0.18);
-  border-color:#2563EB;
-}
-.smart-preset.is-active{
-  border-color:#0C68E9;
-  background:linear-gradient(135deg, rgba(12,104,233,0.12) 0%, rgba(249,115,22,0.08) 100%), var(--surface);
-}
-.smart-preset.is-inactive{
-  opacity:0.85;
-  border-color:var(--line);
-  background:var(--surface);
-  box-shadow:none;
-}
-.sp-content{flex:1;min-width:0}
-.sp-header-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
-.sp-badge{
-  display:inline-flex;
-  align-items:center;
-  gap:5px;
-  background:#0C68E9;
-  color:#FFFFFF;
-  font-size:12px;
-  font-weight:700;
-  padding:3px 10px;
-  border-radius:999px;
-  letter-spacing:.02em;
-}
-.sp-badge svg{width:13px;height:13px}
-.sp-title{
-  font-size:16px;
-  font-weight:700;
-  color:var(--ink);
-}
-.sp-desc{
-  color:var(--ink2);
-  font-size:13px;
-  line-height:1.55;
-  margin:0 0 10px 0;
-}
-.sp-pills{display:flex;flex-wrap:wrap;gap:6px}
-.sp-pill{
-  display:inline-flex;
-  align-items:center;
-  gap:5px;
-  background:var(--surface2);
-  border:1px solid var(--line);
-  color:var(--ink);
-  font-size:11.5px;
-  padding:3px 9px;
-  border-radius:8px;
-  font-weight:500;
-}
-.sp-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
-
-/* Switch داخل البطاقة الذكية */
-.sp-action{
-  flex:none;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:6px;
-  text-align:center;
-  padding-inline-start:14px;
-  border-inline-start:1px solid var(--line);
-}
-.sp-switch{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
-.sp-switch input:checked+.k{background:#0C68E9}
-.sp-switch-label{font-size:13px;font-weight:700;color:var(--ink)}
-.sp-status{
-  font-size:11.5px;
-  font-weight:700;
-  color:#0C68E9;
-  white-space:nowrap;
-}
-.sp-status.off{
-  color:var(--ink3);
-}
-@media (max-width:560px){
-  .smart-preset{flex-direction:column;align-items:flex-start;padding:14px}
-  .sp-action{
-    width:100%;
-    flex-direction:row;
-    justify-content:space-between;
-    padding-inline-start:0;
-    padding-top:10px;
-    border-inline-start:0;
-    border-top:1px solid var(--line);
-  }
-  .sp-switch{flex-direction:row-reverse}
-}
-
 @media (max-width:560px){
   body{font-size:14.5px}
   .g-cap{grid-template-columns:repeat(3,1fr);gap:8px}
@@ -379,49 +303,22 @@ h2{font-size:18px;margin:0;font-weight:700}
 
 <header>
   <div>
-    <h1>قبل ما نبدأ، عرّفني على ذوقك</h1>
-    <p class="lead">دقيقتين بالكثير. أي شي ما تختاره أقرره أنا حسب الفيديو، وتقدر تغيّره بعدين بكلمة «غيّر إعداداتي».</p>
+    <h1>إعدادات استوديو المونتاج الذكي</h1>
+    <p class="lead">خصص ألوانك، خطوطك، وشكل الكابشن بدقيقة واحدة. وكيل الذكاء الاصطناعي سينتج فيديوهاتك وفق هذا التخصيص.</p>
   </div>
   <button type="button" class="iconbtn" id="themeBtn" aria-label="الوضع الليلي والنهاري">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
   </button>
 </header>
 
-<!-- بطاقة قالب وهوية إسلام آي الذكية (Smart Preset) -->
-<div class="smart-preset is-active" id="smartPresetCard">
-  <div class="sp-content">
-    <div class="sp-header-row">
-      <span class="sp-badge">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        قالب موصى به
-      </span>
-      <span class="sp-title">تخصيصات وهوية «إسلام آي» (IslamAI Preset)</span>
-    </div>
-    <p class="sp-desc">تفعيل فوري للمعايير الاحترافية المعتمدة: ألوان البراند الرسمية (#0C68E9 أزرق / #F97316 برتقالي تمييز)، خط Readex Pro الحديث، كابشن ديناميكي بحجم متوسط (Medium)، إيقاع هادئ للشرح، وتصدير مخصص لإنستغرام وتيك توك مع المنطقة الآمنة.</p>
-    <div class="sp-pills">
-      <span class="sp-pill"><span class="sp-dot" style="background:#0C68E9"></span> أزرق #0C68E9</span>
-      <span class="sp-pill"><span class="sp-dot" style="background:#F97316"></span> برتقالي #F97316</span>
-      <span class="sp-pill">خط Readex Pro</span>
-      <span class="sp-pill">كابشن كلمة كلمة (Medium)</span>
-      <span class="sp-pill">إيقاع هادي</span>
-      <span class="sp-pill">Instagram + TikTok (CTA مزدوج)</span>
-    </div>
-  </div>
-  <div class="sp-action">
-    <label class="switch sp-switch" title="تفعيل/تعطيل قالب إسلام آي">
-      <input type="checkbox" id="islamaiToggle" name="islamai_preset" checked>
-      <span class="k"></span>
-      <span class="sp-switch-label">تطبيق القالب</span>
-    </label>
-    <span class="sp-status" id="presetStatus">مفعّل (الافتراضي الذكي)</span>
-  </div>
-</div>
+<div class="studio-layout">
+<div class="studio-main">
 
 <div class="quick">
   <label for="note">اكتب اللي تبيه وخلّ الباقي علي</label>
-  <textarea id="note" name="note" placeholder="مثلاً: إعلان لمطعمي، ألوان الشعار أحمر وأبيض، إيقاع سريع، وبالنهاية «احجز الحين»"></textarea>
+  <textarea id="note" name="note" placeholder="مثلاً: ريلز لمطعم، ألوان رمادي وسماوي، إيقاع سريع، وبالنهاية «تابعنا للمزيد»"></textarea>
   <div class="row">
-    <span class="hint">تبي تختصر؟ اكتب هني واضغط تخطّ — أو كمّل تحت.</span>
+    <span class="hint">تبي تختصر؟ اكتب هنا واضغط تخطّ — أو اختر خياراتك بالأسفل.</span>
     <button type="button" class="btn btn-ghost" id="skipBtn">تخطّ الأسئلة وابدأ</button>
   </div>
 </div>
@@ -429,7 +326,7 @@ h2{font-size:18px;margin:0;font-weight:700}
 <!-- 1 الهوية -->
 <section class="q" data-g="identity">
   <div class="qh"><span class="qn">1</span><h2>ألوانك</h2></div>
-  <p class="qs">كل الكروت والنصوص بالفيديو تاخذ من هالألوان. صورتك نفسها ما تنصبغ.</p>
+  <p class="qs">كل الكروت والنصوص بالفيديو تأخذ من هذه الألوان. صورتك نفسها لا تتغير.</p>
   <div class="tabs" role="tablist">
     <button type="button" class="tab" role="tab" data-tab="palette" aria-selected="true">ألوان جاهزة</button>
     <button type="button" class="tab" role="tab" data-tab="custom" aria-selected="false">أختارها بنفسي</button>
@@ -438,16 +335,16 @@ h2{font-size:18px;margin:0;font-weight:700}
   <div class="panel" data-panel="palette"><div class="grid g-pal" id="pals"></div></div>
   <div class="panel" data-panel="custom" hidden>
     <div class="custom">
-      <label class="cpick"><small>الخلفية</small><input type="color" name="c_bg" value="#111827"></label>
-      <label class="cpick"><small>النص</small><input type="color" name="c_ink" value="#F9FAFB"></label>
-      <label class="cpick"><small>لون التمييز</small><input type="color" name="c_acc" value="#22C55E"></label>
+      <label class="cpick"><small>الخلفية</small><input type="color" name="c_bg" value="#0F172A"></label>
+      <label class="cpick"><small>النص</small><input type="color" name="c_ink" value="#F8FAFC"></label>
+      <label class="cpick"><small>لون التمييز</small><input type="color" name="c_acc" value="#38BDF8"></label>
     </div>
-    <p class="cwarn" id="cwarn" hidden>لون التمييز قريب من الخلفية — الكلمة المميزة ما راح تبان زين. جرّب لون أغمق أو أفتح.</p>
+    <p class="cwarn" id="cwarn" hidden>لون التمييز قريب من الخلفية — الكلمة المميزة لن تظهر بوضوح. اختر لوناً بتباين أعلى.</p>
   </div>
   <div class="panel" data-panel="url" hidden>
     <div class="field">
       <input type="url" name="url" class="ltr" placeholder="https://instagram.com/yourname  أو  https://yoursite.com" inputmode="url">
-      <small>أطلّع ألوانك وخطك وشعارك من الرابط أول ما تبدأ، وأوريك قبل ما أستخدمها.</small>
+      <small>سأستخرج ألوانك وخطك وشعارك من الرابط تلقائياً.</small>
     </div>
   </div>
   <div class="logo-row">
@@ -459,107 +356,151 @@ h2{font-size:18px;margin:0;font-weight:700}
 <!-- 2 الخط -->
 <section class="q" data-g="font">
   <div class="qh"><span class="qn">2</span><h2>الخط</h2></div>
-  <p class="qs">كلها تدعم العربي كامل. اختار اللي يشبهك.</p>
+  <p class="qs">خطوط عربية عصرية ومقروءة على جميع شاشات الجوال.</p>
   <div class="grid g-font" id="fonts"></div>
 </section>
 
 <!-- 3 الكابشن -->
 <section class="q" data-g="capStyle">
   <div class="qh"><span class="qn">3</span><h2>شكل الكابشن</h2></div>
-  <p class="qs">الكلمة تتلوّن لحظة ما تنطقها. المعاينة بألوانك وخطك اللي فوق.</p>
+  <p class="qs">تتلوّن الكلمة لحظة نطقها تماماً مع حركة ديناميكية.</p>
   <div class="grid g-cap" id="caps"></div>
 </section>
 
 <!-- 4 الأرقام -->
 <section class="q" data-g="digits">
   <div class="qh"><span class="qn">4</span><h2>الأرقام</h2></div>
-  <p class="qs">بالكابشن والرسومات.</p>
+  <p class="qs">طريقة ظهور الأرقام في النصوص والكروت.</p>
   <div class="grid g-2">
-    <label class="opt fontc"><input type="radio" name="digits" value="western"><span class="tick"></span><span class="s" style="font-family:Cairo;font-size:22px">خصم 25٪ على 3 قطع</span><span class="t">غربية</span></label>
-    <label class="opt fontc"><input type="radio" name="digits" value="arabic"><span class="tick"></span><span class="s" style="font-family:Cairo;font-size:22px">خصم ٢٥٪ على ٣ قطع</span><span class="t">عربية</span></label>
+    <label class="opt fontc"><input type="radio" name="digits" value="western" checked><span class="tick"></span><span class="s" style="font-family:Cairo;font-size:22px">خصم 25٪ على 3 قطع</span><span class="t">غربية (25)</span></label>
+    <label class="opt fontc"><input type="radio" name="digits" value="arabic"><span class="tick"></span><span class="s" style="font-family:Cairo;font-size:22px">خصم ٢٥٪ على ٣ قطع</span><span class="t">عربية (٢٥)</span></label>
   </div>
 </section>
 
 <!-- 5 الإيقاع -->
 <section class="q" data-g="pace">
   <div class="qh"><span class="qn">5</span><h2>إيقاع المونتاج</h2></div>
-  <p class="qs">كم مرة الكادر يتحرك ويتغيّر.</p>
+  <p class="qs">سرعة التكبير وتغيير الكادر.</p>
   <div class="grid g-3" id="paces"></div>
 </section>
 
 <!-- 6 نوع الفيديو -->
 <section class="q" data-g="content">
   <div class="qh"><span class="qn">6</span><h2>نوع الفيديو</h2></div>
-  <p class="qs">لو ما اخترت، أعرفه من المقطع نفسه.</p>
+  <p class="qs">يتعرف عليه الوكيل آلياً إن تركته تلقائياً.</p>
   <div class="chips" id="ctypes"></div>
-  <div class="sub">فيه أحد يطلع بالفيديو؟</div>
+  <div class="sub">هل يوجد متحدث بالكاميرا؟</div>
   <div class="seg" id="persons"></div>
 </section>
 
 <!-- 7 المقاس -->
 <section class="q" data-g="orientation">
   <div class="qh"><span class="qn">7</span><h2>المقاس</h2></div>
-  <p class="qs">تقدر تختار أكثر من واحد.</p>
+  <p class="qs">المقاس الرأسي (9:16) هو الافتراضي للريلز وتيك توك وشورتس.</p>
   <div class="grid g-3" id="ors"></div>
 </section>
 
-<!-- 8 وين تنشر -->
+<!-- 8 المنصات المستهدفة -->
 <section class="q" data-g="platforms">
-  <div class="qh"><span class="qn">8</span><h2>وين تنشر؟</h2></div>
-  <p class="qs">عشان أبعد النص عن أزرار كل منصة. أكثر من وحدة عادي.</p>
+  <div class="qh"><span class="qn">8</span><h2>المنصات المستهدفة</h2></div>
+  <p class="qs">لضمان احترام المنطقة الآمنة وعدم تغطية النصوص بأزرار التطبيق.</p>
   <div class="chips" id="plats"></div>
-  <div class="sub">طول الفيديو</div>
+  <div class="sub">المدة المستهدفة</div>
   <div class="seg" id="lens"></div>
 </section>
 
 <!-- 9 الصوت -->
 <section class="q" data-g="audio">
-  <div class="qh"><span class="qn">9</span><h2>الصوت</h2></div>
-  <p class="qs">التعليق الصوتي يلزم بس للفيديو اللي ما فيه أحد يتكلم.</p>
+  <div class="qh"><span class="qn">9</span><h2>الصوت والمؤثرات</h2></div>
+  <p class="qs">المؤثرات التفاعلية وخيارات التعليق الصوتي.</p>
   <div class="sub" style="margin-top:4px">التعليق الصوتي</div>
   <div class="seg" id="vmodes"></div>
   <div class="voices" id="voices" hidden>
     <div class="sub">لغة التعليق</div>
     <div class="seg" id="vlangs"></div>
-    <div class="sub">صوت رجل ولا امرأة؟</div>
+    <div class="sub">صوت رجل أم امرأة؟</div>
     <div class="seg" id="vsexes"></div>
     <div id="vlist"></div>
   </div>
-  <div class="sub">ملف صوتي بالخلفية</div>
+  <div class="sub">الموسيقى الخلفية</div>
   <div class="seg" id="bgs"></div>
-  <div class="sub">مؤثرات صوتية (ووش، ضربة، نقرة)</div>
+  <div class="sub">مؤثرات صوتية (انتقالات، ضربات، نقرات)</div>
   <div class="seg" id="sfxs"></div>
 </section>
 
 <!-- 10 كرت النهاية -->
 <section class="q" data-g="endCard">
   <div class="qh"><span class="qn">10</span><h2>كرت النهاية</h2></div>
-  <p class="qs">آخر ثواني الفيديو: حسابك وجملة تدعو للتفاعل. اختياري.</p>
-  <label class="switch"><input type="checkbox" name="end_on" id="endOn"><span class="k"></span><span>أبي كرت بالنهاية</span></label>
+  <p class="qs">بطاقة دعوة لاتخاذ إجراء (Call to Action) في آخر ثواني الفيديو.</p>
+  <label class="switch"><input type="checkbox" name="end_on" id="endOn"><span class="k"></span><span>تفعيل كرت النهاية</span></label>
   <div class="endf" id="endf" hidden>
-    <div class="field"><small>حسابك</small><input type="text" name="handle" class="ltr" placeholder="@yourname"></div>
-    <div class="field"><small>الجملة الأخيرة — قصيرة تطلع كبيرة</small><input type="text" name="cta" maxlength="60" placeholder="تابعني للجزء الثاني"></div>
-    <div class="field"><small>كلمة يعلّقون فيها (اختياري)</small><input type="text" name="word" placeholder="أبي"></div>
+    <div class="field"><small>حسابك</small><input type="text" name="handle" class="ltr" placeholder="@yourhandle"></div>
+    <div class="field"><small>الجملة الأخيرة</small><input type="text" name="cta" maxlength="60" placeholder="تابعنا للمزيد من الأفكار"></div>
+    <div class="field"><small>كلمة التعليق (اختياري للرد الآلي)</small><input type="text" name="word" placeholder="أرسل"></div>
   </div>
 </section>
 
 <!-- 11 الحركات -->
 <section class="q" data-g="moves">
-  <div class="qh"><span class="qn">11</span><h2>الحركات</h2></div>
-  <p class="qs">عندي بنك فيه 50 حركة. كل فيديو أختار له لوحة: 3 حركات أساسية يدور حولها، ولهجة للحظات الخاصة، وما تتكرر من فيديو لفيديو.</p>
-  <label class="switch"><input type="checkbox" name="movesOn" id="movesOn"><span class="k"></span><span>أبي أختار الحركات بنفسي</span></label>
+  <div class="qh"><span class="qn">11</span><h2>الحركات والموشن</h2></div>
+  <p class="qs">بنك يحتوي على أكثر من 50 حركة موشن قرافيكس تفاعلية.</p>
+  <label class="switch"><input type="checkbox" name="movesOn" id="movesOn"><span class="k"></span><span>تخصيص الحركات يدوياً</span></label>
   <div id="movesf" hidden style="margin-top:12px">
-    <p class="qs" style="margin:0 0 10px">افتح البنك واضغط «أبي» على اللي تحبها و«لا» على اللي ما تبيها أبد، واحفظ هناك. والباقي أختار منه حسب المونتاج.</p>
-    <a class="btn btn-ghost" href="/moves/?from=onboard" target="_blank" rel="noopener" style="display:inline-flex;text-decoration:none">افتح بنك الحركات</a>
+    <p class="qs" style="margin:0 0 10px">اختر الحركات التي تفضلها في الفيديوهات من بنك الحركات.</p>
+    <a class="btn btn-ghost" href="/moves/?from=onboard" target="_blank" rel="noopener" style="display:inline-flex;text-decoration:none">استعراض بنك الحركات</a>
     <span id="movesSaved" style="margin-inline-start:10px;color:var(--ink2);font-size:14px"></span>
   </div>
 </section>
 
-</div>
+</div> <!-- .studio-main -->
+
+<!-- الشاشة الجانبية الثابتة على أجهزة الكمبيوتر (Desktop Sticky Aside) -->
+<aside class="studio-aside">
+  <div class="sticky-preview-card">
+    <div class="preview-top">
+      <span class="preview-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="3"/><circle cx="12" cy="18" r="1"/></svg>
+        معاينة حية مباشرة
+      </span>
+      <span class="preview-badge">Live Preview</span>
+    </div>
+    
+    <div class="phone-frame">
+      <div class="phone cap-card" id="desktopPhone">
+        <span class="person"></span>
+        <span class="cap">
+          <span class="w">كلامك</span>
+          <span class="w">يطلع</span>
+          <span class="w a h">كلمة</span>
+          <span class="w">كلمة</span>
+        </span>
+      </div>
+    </div>
+    
+    <div class="preview-info">
+      <div class="preview-info-row">
+        <span>الخط الحالي:</span>
+        <strong id="lblFont">Cairo</strong>
+      </div>
+      <div class="preview-info-row">
+        <span>نمط الكابشن:</span>
+        <strong id="lblCap">كرت</strong>
+      </div>
+      <div class="preview-info-row">
+        <span>اللوحة المختارة:</span>
+        <strong id="lblPal" style="color:var(--p-acc)">رمادي وسماوي</strong>
+      </div>
+    </div>
+  </div>
+</aside>
+
+</div> <!-- .studio-layout -->
+
+</div> <!-- .wrap -->
 
 <div class="bar"><div class="wrap">
-  <div class="prog"><div class="meter"><i id="meterI"></i></div><span id="progT">كل شي تلقائي — اختار اللي يهمك بس</span></div>
-  <button type="button" class="btn btn-pri" id="saveBtn">احفظ وخلّنا نبدأ
+  <div class="prog"><div class="meter"><i id="meterI"></i></div><span id="progT">الخيارات الافتراضية محددة — اختر ما يناسبك</span></div>
+  <button type="button" class="btn btn-pri" id="saveBtn">حفظ وبدء العمل
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
 </div></div>
 </form>
@@ -567,26 +508,26 @@ h2{font-size:18px;margin:0;font-weight:700}
 <div class="done-ov" id="doneOv" role="dialog" aria-live="polite">
   <div>
     <div class="ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div>
-    <h2 id="doneH">انحفظ</h2>
-    <p id="doneP">ارجع لكلود — بدأ الشغل. تقدر تسكّر هالصفحة.</p>
+    <h2 id="doneH">تم الحفظ بنجاح!</h2>
+    <p id="doneP">يمكنك الآن إخبار وكيل الذكاء الاصطناعي (Claude / Hermes / Agent) بإنتاج الفيديو.</p>
     <pre id="doneJ" hidden></pre>
   </div>
 </div>
 <div class="toast" id="toast"></div>
 
 <script>
-/* ═══════════ البيانات ═══════════ */
+/* ═══════════ البيانات واللوحات المحايدة ═══════════ */
 const TICK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
-const PALETTES=[  /* محايدة + هوية المستخدم */
-  {id:'islamai',    n:'ألواني (إسلام آي)', bg:'#0C68E9',ink:'#FFFFFF',acc:'#F97316',clay:'#60A5FA',mut:'#EFF6FF'},
-  {id:'night-gold', n:'ليل وذهبي',   bg:'#101828',ink:'#F5F7FA',acc:'#F2B33D',clay:'#C98B18',mut:'#98A2B3'},
-  {id:'paper-indigo',n:'أبيض ونيلي', bg:'#F7F8FC',ink:'#111827',acc:'#3B5BFD',clay:'#2A3FC0',mut:'#6B7280'},
-  {id:'coal-lime',  n:'فحمي وليموني',bg:'#0E0F0C',ink:'#F4F4EF',acc:'#C6F432',clay:'#93B51F',mut:'#8C8F85'},
-  {id:'deep-mint',  n:'أخضر عميق',  bg:'#0B2A26',ink:'#EAF6F2',acc:'#3DDC97',clay:'#1FA774',mut:'#8FB5AA'},
-  {id:'plum-pink',  n:'بنفسجي ووردي',bg:'#1A1030',ink:'#F7F2FF',acc:'#FF5C8A',clay:'#D63A6A',mut:'#A89BC2'},
-  {id:'white-red',  n:'أبيض وأحمر', bg:'#FFFFFF',ink:'#0A0A0A',acc:'#FF3B30',clay:'#C62A22',mut:'#737373'},
-  {id:'ocean',      n:'بحري',       bg:'#06283D',ink:'#EAF4FB',acc:'#47B5FF',clay:'#1C82C9',mut:'#8BA9BD'},
-  {id:'white-teal', n:'أبيض وتركوازي',bg:'#F4F8F8',ink:'#0B1F24',acc:'#0E9C9C',clay:'#0A7575',mut:'#5E7479'},
+const PALETTES=[
+  {id:'slate-cyan',  n:'رمادي وسماوي (الافتراضي)', bg:'#0F172A',ink:'#F8FAFC',acc:'#38BDF8',clay:'#0284C7',mut:'#94A3B8'},
+  {id:'night-gold',  n:'ليل وذهبي',              bg:'#101828',ink:'#F5F7FA',acc:'#F2B33D',clay:'#C98B18',mut:'#98A2B3'},
+  {id:'paper-indigo',n:'أبيض ونيلي',             bg:'#F7F8FC',ink:'#111827',acc:'#3B5BFD',clay:'#2A3FC0',mut:'#6B7280'},
+  {id:'coal-lime',   n:'فحمي وليموني',           bg:'#0E0F0C',ink:'#F4F4EF',acc:'#C6F432',clay:'#93B51F',mut:'#8C8F85'},
+  {id:'deep-mint',   n:'أخضر عميق زمردي',         bg:'#0B2A26',ink:'#EAF6F2',acc:'#3DDC97',clay:'#1FA774',mut:'#8FB5AA'},
+  {id:'plum-pink',   n:'بنفسجي ووردي',           bg:'#1A1030',ink:'#F7F2FF',acc:'#FF5C8A',clay:'#D63A6A',mut:'#A89BC2'},
+  {id:'white-red',   n:'أبيض وأحمر',             bg:'#FFFFFF',ink:'#0A0A0A',acc:'#FF3B30',clay:'#C62A22',mut:'#737373'},
+  {id:'ocean',       n:'أزرق بحري',              bg:'#06283D',ink:'#EAF4FB',acc:'#47B5FF',clay:'#1C82C9',mut:'#8BA9BD'},
+  {id:'white-teal',  n:'أبيض وتركوازي',          bg:'#F4F8F8',ink:'#0B1F24',acc:'#0E9C9C',clay:'#0A7575',mut:'#5E7479'},
 ];
 const FONTS=[
   {f:'Cairo',n:'كايرو',d:'متوازن وواضح'},
@@ -599,80 +540,69 @@ const FONTS=[
   {f:'Lalezar',n:'لاله‌زار',d:'عريض للعناوين'},
 ];
 const FONT_SAMPLE='خلّ الفيديو يحكي عنك — 2026';
-const CAPS_ST=[  /* نفس أسماء المحرّك: theme.json ← capStyle */
+const CAPS_ST=[
+  {v:'card',     n:'كرت',      d:'كرت ملون والكلمة تنصبغ'},
   {v:'medium',   n:'كلمة كلمة (متوسط)', d:'حجم متوازن مريح للعين'},
   {v:'big',      n:'كلمة كلمة (كبير)',   d:'كلمة وحدة ضخمة'},
-  {v:'card',     n:'كرت',      d:'كرت بلونك والكلمة تنصبغ'},
-  {v:'shadow',   n:'ظل',       d:'أبيض كبير بلا خلفية'},
-  {v:'underline',n:'خط تحت',   d:'خط بلونك تحت الكلمة'},
-  {v:'bar',      n:'شريط',     d:'شريط بلونك ورا الكلمة'},
-  {v:'type',     n:'كتابة',    d:'تنكتب قدامك بمؤشر'},
+  {v:'shadow',   n:'ظل',       d:'أبيض كبير مع ظل ناعم'},
+  {v:'underline',n:'خط تحت',   d:'خط بلون التمييز تحت الكلمة'},
+  {v:'bar',      n:'شريط',     d:'شريط بلون التمييز خلف الكلمة'},
+  {v:'type',     n:'كتابة',    d:'تنكتب بحركة المؤشر'},
 ];
 const CAP_WORDS=['كلامك','يطلع','كلمة','كلمة'];
 const PACES=[
-  {v:'calm', n:'هادي', d:'زوم ناعم وقطعات قليلة — للشرح والمحتوى الراقي', seg:3},
-  {v:'fast', n:'سريع', d:'تغيير كل ثانية ونص تقريباً — ريلز عادي', seg:8},
-  {v:'hyper',n:'صاروخ',d:'شي يتحرك كل نص ثانية — هوك وترند', seg:16},
+  {v:'fast', n:'سريع', d:'تغيير كل ثانية ونصف — ريلز عصري', seg:8},
+  {v:'calm', n:'هادئ', d:'زوم ناعم وقطعات هادئة — للشرح والمحتوى الراقي', seg:3},
+  {v:'hyper',n:'فائق السرعة',d:'حركة كل نصف ثانية — هوك وترند', seg:16},
 ];
 const CTYPES=[
   {v:'auto',n:'تلقائي'},{v:'talking',n:'كلام للكاميرا'},{v:'podcast',n:'بودكاست'},{v:'review',n:'مراجعة منتج'},
-  {v:'news',n:'خبر'},{v:'montage',n:'مونتاج مقاطع'},{v:'explainer',n:'شرح موشن بلا شخص (تجريبي)'},
+  {v:'news',n:'أخبار'},{v:'montage',n:'مونتاج لقطات'},{v:'explainer',n:'شرح موشن'},
 ];
-const PERSONS=[{v:'auto',n:'تلقائي'},{v:'with',n:'إي، فيه أحد'},{v:'without',n:'لا، بدون شخص'}];
+const PERSONS=[{v:'auto',n:'تلقائي'},{v:'yes',n:'نعم (شخص)'},{v:'no',n:'لا (شاشة/منتج)'}];
 const ORS=[
-  {v:'9:16',n:'طولي 9:16',d:'ريلز · تيك توك · شورتس',w:18,h:32},
-  {v:'16:9',n:'عرضي 16:9',d:'يوتيوب · لينكدإن',w:36,h:20},
-  {v:'1:1', n:'مربع 1:1', d:'بوست · إعلان',w:26,h:26},
+  {v:'9:16',n:'رأسي 9:16',d:'ريلز، تيك توك، شورتس',w:22,h:36},
+  {v:'1:1', n:'مربع 1:1', d:'بوست انستقرام وتويتر',w:28,h:28},
+  {v:'16:9',n:'أفقي 16:9',d:'يوتيوب وفيديو كامل',w:36,h:22},
 ];
-const PLATS=[
-  {v:'instagram',n:'انستقرام'},{v:'tiktok',n:'تيك توك'},{v:'shorts',n:'يوتيوب شورتس'},{v:'snapchat',n:'سناب'},
-  {v:'youtube',n:'يوتيوب'},{v:'x',n:'إكس'},{v:'linkedin',n:'لينكدإن'},
+const PLATS=[{v:'instagram',n:'إنستغرام'},{v:'tiktok',n:'تيك توك'},{v:'youtube',n:'يوتيوب'},{v:'x',n:'إكس (تويتر)'}];
+const LENS=[{v:'auto',n:'تلقائي'},{v:'short',n:'قصير (< 40ث)'},{v:'medium',n:'متوسط (40-75ث)'},{v:'full',n:'كامل'}];
+const VMODES=[{v:'auto',n:'تلقائي'},{v:'original',n:'صوت الفيديو الأصلي'},{v:'tts',n:'توليد صوت آلي بالذكاء الاصطناعي'}];
+const BGS=[{v:'auto',n:'تلقائي'},{v:'soft',n:'موسيقى خفيفة'},{v:'upbeat',n:'حماسية'},{v:'off',n:'بلا خلفية صوتية'}];
+const SFXS=[{v:'on',n:'تفعيل المؤثرات التفاعلية'},{v:'off',n:'بدون مؤثرات'}];
+const VLANGS=[{v:'fusha',n:'عربية فصحى'},{v:'dialect',n:'لهجة محلية'}];
+const VSEXES=[{v:'auto',n:'تلقائي'},{v:'m',n:'صوت رجل'},{v:'f',n:'صوت امرأة'}];
+const VOICES=[
+  ['أصوات فصحى ممتازة',[
+    ['ar-SA-HamedNeural','حامد','فصحى','رجل'],
+    ['ar-SA-ZariyahNeural','زارية','فصحى','امرأة'],
+    ['ar-EG-ShakirNeural','شاكر','فصحى/مصر','رجل'],
+    ['ar-EG-SalmaNeural','سلمى','فصحى/مصر','امرأة'],
+  ]],
 ];
-const LENS=[{v:'auto',n:'تلقائي'},{v:'30',n:'أقل من 30 ث'},{v:'60',n:'دقيقة'},{v:'90',n:'دقيقة ونص'},{v:'full',n:'مثل ما هو'}];
-const VMODES=[{v:'auto',n:'تلقائي'},{v:'own',n:'صوتي أنا'},{v:'tts',n:'صوت مولّد مجاني'}];
-const VLANGS=[{v:'fusha',n:'فصحى (بلا غلط)'},{v:'dialect',n:'لهجة (تجريبي)'},{v:'auto',n:'تلقائي'}];
-const VSEXES=[{v:'auto',n:'تلقائي'},{v:'m',n:'رجل'},{v:'f',n:'امرأة'}];
-const VOICES=[  /* edge-tts — أصوات مايكروسوفت العربية المجانية */
-  ['الخليج',[['ar-KW-FahedNeural','فهد','كويتي','رجل'],['ar-KW-NouraNeural','نورة','كويتية','امرأة'],
-            ['ar-SA-HamedNeural','حامد','سعودي','رجل'],['ar-SA-ZariyahNeural','زارية','سعودية','امرأة'],
-            ['ar-AE-HamdanNeural','حمدان','إماراتي','رجل'],['ar-AE-FatimaNeural','فاطمة','إماراتية','امرأة'],
-            ['ar-QA-MoazNeural','معاذ','قطري','رجل'],['ar-QA-AmalNeural','أمل','قطرية','امرأة'],
-            ['ar-BH-AliNeural','علي','بحريني','رجل'],['ar-BH-LailaNeural','ليلى','بحرينية','امرأة'],
-            ['ar-OM-AbdullahNeural','عبدالله','عماني','رجل'],['ar-OM-AyshaNeural','عائشة','عمانية','امرأة']]],
-  ['الشام والعراق واليمن',[['ar-IQ-BasselNeural','باسل','عراقي','رجل'],['ar-IQ-RanaNeural','رنا','عراقية','امرأة'],
-            ['ar-JO-TaimNeural','تيم','أردني','رجل'],['ar-JO-SanaNeural','سناء','أردنية','امرأة'],
-            ['ar-LB-RamiNeural','رامي','لبناني','رجل'],['ar-LB-LaylaNeural','ليلى','لبنانية','امرأة'],
-            ['ar-SY-LaithNeural','ليث','سوري','رجل'],['ar-SY-AmanyNeural','أماني','سورية','امرأة'],
-            ['ar-YE-SalehNeural','صالح','يمني','رجل'],['ar-YE-MaryamNeural','مريم','يمنية','امرأة']]],
-  ['مصر والمغرب العربي',[['ar-EG-ShakirNeural','شاكر','مصري','رجل'],['ar-EG-SalmaNeural','سلمى','مصرية','امرأة'],
-            ['ar-MA-JamalNeural','جمال','مغربي','رجل'],['ar-MA-MounaNeural','منى','مغربية','امرأة'],
-            ['ar-TN-HediNeural','هادي','تونسي','رجل'],['ar-TN-ReemNeural','ريم','تونسية','امرأة'],
-            ['ar-DZ-IsmaelNeural','إسماعيل','جزائري','رجل'],['ar-DZ-AminaNeural','أمينة','جزائرية','امرأة'],
-            ['ar-LY-OmarNeural','عمر','ليبي','رجل'],['ar-LY-ImanNeural','إيمان','ليبية','امرأة']]],
-];
-const BGS=[{v:'auto',n:'قرّر وقتها'},{v:'none',n:'بدون'},{v:'own',n:'عندي ملف'}];
-const SFXS=[{v:'auto',n:'تلقائي'},{v:'on',n:'شغّلها'},{v:'off',n:'بدونها'}];
-const SERVER=location.protocol.startsWith('http');
 
-/* ═══════════ بناء الخيارات ═══════════ */
-const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* ═══════════ التهيئة والعناصر ═══════════ */
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+let idMode='palette', logoData=null;
+const SERVER=location.hostname==='127.0.0.1'||location.hostname==='localhost';
+
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function opt(type,name,v,inner,cls=''){return `<label class="opt ${cls}"><input type="${type}" name="${name}" value="${esc(v)}"><span class="tick">${TICK}</span>${inner}</label>`;}
 function simple(box,type,name,list){ $(box).innerHTML=list.map(o=>opt(type,name,o.v,`<span class="t">${o.n}</span>`)).join(''); }
 
 $('#pals').innerHTML=PALETTES.map(p=>opt('radio','palette',p.id,
-  `<span class="mini" style="background:${p.bg};color:${p.ink}"><b style="font-family:Cairo">أهلاً فيك</b><i style="background:${p.acc};color:${onColor(p.acc,p.ink,p.bg)}">جديد</i></span>
+  `<span class="mini" style="background:${p.bg};color:${p.ink}"><b style="font-family:Cairo">أهلاً بك</b><i style="background:${p.acc};color:${onColor(p.acc,p.ink,p.bg)}">جديد</i></span>
    <span class="dots">${[p.bg,p.ink,p.acc].map(c=>`<span style="background:${c}"></span>`).join('')}</span><span class="t">${p.n}</span>`,'pal')).join('');
 
-$('#fonts').innerHTML=opt('radio','font','auto',`<span class="s">أختاره أنا حسب الفيديو</span><span class="n"><span class="t">تلقائي</span></span>`,'fontc auto')+
+$('#fonts').innerHTML=opt('radio','font','auto',`<span class="s">أختاره حسب الفيديو</span><span class="n"><span class="t">تلقائي</span></span>`,'fontc auto')+
   FONTS.map(x=>opt('radio','font',x.f,`<span class="s" style="font-family:'${x.f}';font-weight:${x.f==='Lalezar'?400:700}">${FONT_SAMPLE}</span>
    <span class="n"><span class="t" style="color:var(--ink)">${x.n}</span><span>${x.d}</span></span>`,'fontc')).join('');
 
 const capWords=CAP_WORDS.map((w,i)=>`<span class="w${i===0?' h':''}">${w}</span>`).join('');
-$('#caps').innerHTML=opt('radio','capStyle','auto',`<span class="phone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg></span><span class="t">تلقائي</span><span class="d">أختار حسب الفيديو</span>`,'capc cap-auto')+
+$('#caps').innerHTML=opt('radio','capStyle','auto',`<span class="phone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg></span><span class="t">تلقائي</span><span class="d">حسب الفيديو</span>`,'capc cap-auto')+
   CAPS_ST.map(c=>opt('radio','capStyle',c.v,`<span class="phone"><span class="person"></span><span class="cap">${capWords}</span></span><span class="t">${c.n}</span><span class="d">${c.d}</span>`,'capc cap-'+c.v)).join('');
 
-$('#paces').innerHTML=opt('radio','pace','auto',`<span class="stage" style="display:grid;place-items:center;color:var(--ink3);font-size:13px">حسب الكلام</span><span class="t">تلقائي</span><span class="d">أختار حسب نوع الفيديو</span>`,'pacec')+
+$('#paces').innerHTML=opt('radio','pace','auto',`<span class="stage" style="display:grid;place-items:center;color:var(--ink3);font-size:13px">حسب الكلام</span><span class="t">تلقائي</span><span class="d">حسب نوع الفيديو</span>`,'pacec')+
   PACES.map(p=>opt('radio','pace',p.v,`<span class="stage pace-${p.v}"><span class="fr"><span></span></span><span class="fl"></span><span class="tl">${'<b></b>'.repeat(p.seg)}</span></span><span class="t">${p.n}</span><span class="d">${p.d}</span>`,'pacec')).join('');
 
 simple('#ctypes','radio','ctype',CTYPES);
@@ -684,25 +614,26 @@ simple('#vmodes','radio','voiceMode',VMODES);
 simple('#bgs','radio','bgAudio',BGS);
 simple('#sfxs','radio','sfx',SFXS);
 simple('#vlangs','radio','voiceLang',VLANGS); simple('#vsexes','radio','voiceSex',VSEXES);
-$('#vlist').innerHTML=`<label class="opt vopt vauto"><input type="radio" name="voice" value="auto"><span class="t">اختاره أنا</span><span class="d">أجرّب الأصوات على نصّك وأختار الأوضح</span></label>`+VOICES.map(([g,vs],gi)=>`${gi===1?'<details class="more"><summary>لهجات ثانية (الشام، العراق، اليمن، مصر، المغرب العربي)</summary>':''}<div class="vgroup"><h3>${g}</h3><div class="vrow">${vs.map(([id,n,dial,sex])=>
+$('#vlist').innerHTML=`<label class="opt vopt vauto"><input type="radio" name="voice" value="auto"><span class="t">اختيار تلقائي</span><span class="d">أجرّب الأصوات على النص وأختار الأنسب</span></label>`+VOICES.map(([g,vs],gi)=>`${gi===1?'<details class="more"><summary>لهجات إضافية</summary>':''}<div class="vgroup"><h3>${g}</h3><div class="vrow">${vs.map(([id,n,dial,sex])=>
   `<label class="opt vopt" data-sex="${sex==='رجل'?'m':'f'}"><input type="radio" name="voice" value="${id}"><button type="button" class="play" data-v="${id}" aria-label="اسمع ${n}"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button><span class="t">${n}</span><span class="d">${dial} · ${sex}</span></label>`).join('')}</div></div>${gi===VOICES.length-1?'</details>':''}`).join('')+
-  `<div class="vnote" id="vnote">${SERVER?'اضغط زر التشغيل تسمع العيّنة (يحتاج نت، أول مرة ثانيتين).':'العيّنات تشتغل لما تنفتح الصفحة من كلود.'} الأصوات مجانية من مايكروسوفت. بالفصحى المشكّلة تطلع مثل مذيع بلا غلط، وباللهجة ممكن تطلع مكسّرة — أجرّبها قبل وأسمعك.</div>`;
+  `<div class="vnote" id="vnote">الأصوات الذكية مجانية ومبنية على أحدث نماذج توليد الكلام.</div>`;
 
 /* ═══════════ الألوان والمعاينة ═══════════ */
 function hx(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16));}
 function toHex(a){return '#'+a.map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('').toUpperCase();}
 function lum(h){return hx(h).map(v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);}).reduce((s,v,i)=>s+v*[0.2126,0.7152,0.0722][i],0);}
 function contrast(a,b){const x=lum(a),y=lum(b);return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05);}
-function onColor(acc,ink,bg){ /* النص فوق لون التمييز — نفس on_accent بـ00_onboard.py حرفياً (ينكتب theme.onAcc والمحرّك يرسم فيه):
-  الأوضح من ألوانه (ink/bg) لو تباينه 4.5 وفوق، وإلا الأوضح من ألوانه + الأبيض + الأسود */
+function onColor(acc,ink,bg){
   const best=[ink,bg].reduce((b,c)=>contrast(c,acc)>contrast(b,acc)?c:b);
   if(contrast(best,acc)>=4.5) return best;
-  return [ink,bg,'#FFFFFF','#111111'].reduce((b,c)=>contrast(c,acc)>contrast(b,acc)?c:b); }
-function mix(a,b,k){const A=hx(a),B=hx(b);return toHex(A.map((v,i)=>v+(B[i]-v)*k));}
-let idMode='palette';
+  return [ink,bg,'#FFFFFF','#111111'].reduce((b,c)=>contrast(c,acc)>contrast(b,acc)?c:b);
+}
+function mix(c1,c2,w){const a=hx(c1),b=hx(c2);return toHex(a.map((v,i)=>v*(1-w)+b[i]*w));}
 function currentColors(){
-  if(idMode==='custom'){const f=$('#f'); const bg=f.c_bg.value.toUpperCase(), ink=f.c_ink.value.toUpperCase(), acc=f.c_acc.value.toUpperCase();
-    return {bg,ink,acc,clay:mix(acc,'#000000',0.22),mut:mix(bg,ink,0.55)};}
+  if(idMode==='custom'){
+    const bg=$('input[name=c_bg]').value, ink=$('input[name=c_ink]').value, acc=$('input[name=c_acc]').value;
+    return {bg,ink,acc,clay:mix(acc,'#000000',0.22),mut:mix(bg,ink,0.55)};
+  }
   const id=($('input[name=palette]:checked')||{}).value; const p=PALETTES.find(x=>x.id===id);
   return p?{bg:p.bg,ink:p.ink,acc:p.acc,clay:p.clay,mut:p.mut}:null;
 }
@@ -711,14 +642,29 @@ function applyPreview(){
   const w=$('#cwarn'); if(w) w.hidden=!(idMode==='custom'&&(contrast(c.acc,c.bg)<1.8||contrast(onColor(c.acc,c.ink,c.bg),c.acc)<3));
   r.setProperty('--p-bg',c.bg); r.setProperty('--p-ink',c.ink); r.setProperty('--p-acc',c.acc); r.setProperty('--p-on',onColor(c.acc,c.ink,c.bg));
   const f=($('input[name=font]:checked')||{}).value; r.setProperty('--p-font',(f&&f!=='auto')?`'${f}'`:"'Cairo'");
+
+  // تحديث المعاينة الجانبية للمكتب
+  const capVal=($('input[name=capStyle]:checked')||{}).value || 'card';
+  const dp=$('#desktopPhone');
+  if(dp){
+    dp.className = 'phone cap-' + (capVal==='auto' ? 'card' : capVal);
+  }
+  const fObj = FONTS.find(x=>x.f===f);
+  if($('#lblFont')) $('#lblFont').textContent = fObj ? fObj.n : (f==='auto' ? 'تلقائي' : 'كايرو');
+  const capObj = CAPS_ST.find(x=>x.v===capVal);
+  if($('#lblCap')) $('#lblCap').textContent = capObj ? capObj.n : 'تلقائي';
+  const palId = ($('input[name=palette]:checked')||{}).value;
+  const palObj = PALETTES.find(x=>x.id===palId);
+  if($('#lblPal')) $('#lblPal').textContent = palObj ? palObj.n : (idMode==='custom' ? 'مخصصة' : 'رمادي وسماوي');
 }
-/* كلمة كلمة — نفس فكرة تظليل الكلمة المنطوقة */
+
+/* حركة الكلمات المتتابعة */
 let wi=0;
 setInterval(()=>{ wi=(wi+1)%(CAP_WORDS.length+2);
   $$('.phone .cap').forEach(cap=>[...cap.children].forEach((w,i)=>{w.classList.toggle('a',i===wi);w.classList.toggle('p',i<wi);}));
 },420);
 
-/* ═══════════ التفاعل ═══════════ */
+/* ═══════════ التفاعل والأحداث ═══════════ */
 const touched=new Set();
 const GROUPS=['identity','font','capStyle','digits','pace','content','orientation','platforms','audio','endCard','moves'];
 const groupOf={movesOn:'moves',palette:'identity',c_bg:'identity',c_ink:'identity',c_acc:'identity',url:'identity',font:'font',capStyle:'capStyle',digits:'digits',pace:'pace',
@@ -728,86 +674,13 @@ function syncOn(){ $$('.opt input').forEach(i=>i.closest('.opt').classList.toggl
 function progress(){
   GROUPS.forEach(g=>{const s=$(`section[data-g="${g}"]`); if(s) s.classList.toggle('done',touched.has(g));});
   const n=touched.size; $('#meterI').style.width=(n/GROUPS.length*100)+'%';
-  $('#progT').textContent=n===0?'كل شي تلقائي — اختار اللي يهمك بس':`اخترت ${n} من ${GROUPS.length} — الباقي أقرره أنا`;
+  $('#progT').textContent=n===0?'الخيارات الافتراضية محددة — اختر ما يناسبك':`اخترت ${n} من ${GROUPS.length} تفضيلات`;
 }
 $('#f').addEventListener('change',e=>{
   const n=e.target.name; if(groupOf[n]) touched.add(groupOf[n]);
   if(n==='voice'){ setRadio('voiceMode','tts'); }
-  if(n==='voiceMode') $('#voices').hidden=e.target.value!=='tts';
-  if(n==='voiceSex') filterVoices();
-  if(n==='ctype'&&e.target.value==='explainer') setRadio('person','without');
-  if(n==='end_on') $('#endf').hidden=!e.target.checked;
-  syncOn(); applyPreview(); progress(); checkPresetCustomization();
-});
-
-function checkPresetCustomization(){
-  const toggle=$('#islamaiToggle'), status=$('#presetStatus');
-  if(!toggle||!status||!toggle.checked) return;
-  const currentPal=($('input[name=palette]:checked')||{}).value;
-  const currentFont=($('input[name=font]:checked')||{}).value;
-  const currentCap=($('input[name=capStyle]:checked')||{}).value;
-  const currentPace=($('input[name=pace]:checked')||{}).value;
-  const isIslamAIBase=(idMode==='palette'&&currentPal==='islamai')&&currentFont==='Readex Pro'&&currentCap==='medium'&&currentPace==='calm';
-  status.textContent = isIslamAIBase ? 'مفعّل (الافتراضي الذكي)' : 'مفعّل (مع تعديل يدوي)';
-}
-
-/* ═══════════ قالب إسلام آي الذكي ═══════════ */
-function applyIslamAIPreset(enable, silent=false){
-  const card=$('#smartPresetCard'), toggle=$('#islamaiToggle'), status=$('#presetStatus');
-  if(!card||!toggle) return;
-  if(enable){
-    idMode='palette';
-    $$('.tab').forEach(x=>x.setAttribute('aria-selected',x.dataset.tab==='palette'));
-    $$('.panel').forEach(p=>p.hidden=p.dataset.panel!=='palette');
-    setRadio('palette','islamai');
-    touched.add('identity');
-
-    setRadio('font','Readex Pro');
-    touched.add('font');
-
-    setRadio('capStyle','medium');
-    touched.add('capStyle');
-
-    setRadio('pace','calm');
-    touched.add('pace');
-
-    const o916=$('input[name=orientation][value="9:16"]');
-    if(o916) o916.checked=true;
-    touched.add('orientation');
-
-    const platInsta=$('input[name=platforms][value="instagram"]');
-    const platTikTok=$('input[name=platforms][value="tiktok"]');
-    if(platInsta) platInsta.checked=true;
-    if(platTikTok) platTikTok.checked=true;
-    touched.add('platforms');
-
-    setRadio('sfx','on');
-    touched.add('audio');
-
-    card.classList.add('is-active');
-    card.classList.remove('is-inactive');
-    toggle.checked=true;
-    if(status){ status.textContent='مفعّل (الافتراضي الذكي)'; status.classList.remove('off'); }
-    if(!silent) toast('✨ تم تطبيق قالب وتخصيصات إسلام آي بنجاح!');
-  } else {
-    setRadio('font','auto');
-    setRadio('capStyle','auto');
-    setRadio('pace','auto');
-    setRadio('sfx','auto');
-
-    card.classList.remove('is-active');
-    card.classList.add('is-inactive');
-    toggle.checked=false;
-    if(status){ status.textContent='معطّل (يدوي)'; status.classList.add('off'); }
-    if(!silent) toast('تم إيقاف القالب والعودة للخيارات التلقائية.');
-  }
   syncOn(); applyPreview(); progress();
-}
-
-const islamaiToggleEl=$('#islamaiToggle');
-if(islamaiToggleEl){
-  islamaiToggleEl.addEventListener('change',e=>applyIslamAIPreset(e.target.checked,false));
-}
+});
 $('#f').addEventListener('input',e=>{ const n=e.target.name;
   if(['handle','cta','word','url'].includes(n)&&e.target.value.trim()) touched.add(groupOf[n]);
   if(n&&n.startsWith('c_')){touched.add('identity'); applyPreview();} progress(); });
@@ -820,58 +693,61 @@ $$('.tab').forEach(t=>t.addEventListener('click',()=>{
   applyPreview(); progress();
 }));
 
-/* الشعار */
-let logoData=null;
-$('#logoIn').addEventListener('change',e=>{ const file=e.target.files[0]; if(!file) return;
-  if(file.size>6*1024*1024){ toast('الشعار كبير — أقل من 6 ميقا لو سمحت'); return; }
-  const rd=new FileReader(); rd.onload=()=>{ logoData={name:file.name,data:rd.result};
-    $('#logoPrev').innerHTML=`<img alt="" src="${rd.result}">`; touched.add('identity'); progress(); }; rd.readAsDataURL(file); });
-
-function filterVoices(){ const sx=val('voiceSex'); $$('#vlist .vopt[data-sex]').forEach(l=>{ l.hidden=(sx==='m'||sx==='f')&&l.dataset.sex!==sx; }); }
-/* عيّنات الأصوات */
-let audio=null;
-$('#voices').addEventListener('click',async e=>{
-  const b=e.target.closest('.play'); if(!b) return; e.preventDefault(); e.stopPropagation();
-  setRadio('voice',b.dataset.v); setRadio('voiceMode','tts'); touched.add('audio'); progress();
-  if(!SERVER){ toast('العيّنات تشتغل لما تنفتح الصفحة من كلود'); return; }
-  if(audio){audio.pause();}
-  b.classList.add('busy');
-  try{ const r=await fetch('/api/voice?v='+encodeURIComponent(b.dataset.v)+'&lang='+(val('voiceLang')==='dialect'?'dialect':'fusha')); if(!r.ok) throw new Error(await r.text());
-    const blob=await r.blob(); audio=new Audio(URL.createObjectURL(blob)); await audio.play();
-  }catch(err){ toast('ما قدرت أشغّل العيّنة — يمكن النت مفصول. الصوت ينحفظ عادي.'); }
-  finally{ b.classList.remove('busy'); }
+/* رفع الشعار */
+$('#logoIn').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader(); r.onload=ev=>{ logoData=ev.target.result; $('#logoPrev').innerHTML=`<img alt="" src="${logoData}">`; touched.add('identity'); progress(); };
+  r.readAsDataURL(f);
 });
 
-/* الوضع الليلي */
-function themeInit(){ let t=null; try{t=localStorage.getItem('vae-theme');}catch(e){} if(t) document.documentElement.dataset.theme=t; }
-$('#themeBtn').addEventListener('click',()=>{ const dark=getComputedStyle(document.documentElement).colorScheme.includes('dark');
-  const t=dark?'light':'dark'; document.documentElement.dataset.theme=t; try{localStorage.setItem('vae-theme',t);}catch(e){} });
-themeInit();
+/* الوضع الليلي والنهاري */
+$('#themeBtn').addEventListener('click',()=>{
+  const curr=document.documentElement.getAttribute('data-theme')||'dark';
+  const nxt=curr==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',nxt);
+  try{localStorage.setItem('vae-theme',nxt);}catch(e){}
+});
+try{const t=localStorage.getItem('vae-theme'); if(t) document.documentElement.setAttribute('data-theme',t);}catch(e){}
 
-function toast(m){const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),2600);}
+/* تشغيل عيّنات الصوت */
+let curAudio=null;
+$$('.play').forEach(b=>b.addEventListener('click',async ev=>{
+  ev.preventDefault(); ev.stopPropagation();
+  const v=b.dataset.v; if(curAudio){curAudio.pause();curAudio=null;}
+  b.classList.add('busy');
+  const lang=($('input[name=voiceLang]:checked')||{}).value||'fusha';
+  try{
+    const r=await fetch(`/api/voice?v=${encodeURIComponent(v)}&lang=${encodeURIComponent(lang)}`);
+    if(!r.ok) throw new Error(await r.text());
+    const blob=await r.blob(); const url=URL.createObjectURL(blob);
+    curAudio=new Audio(url); curAudio.play();
+    curAudio.onended=()=>{ b.classList.remove('busy'); URL.revokeObjectURL(url); };
+  }catch(e){ toast('تعذر تشغيل الصوت: '+(e.message||'خطأ')); }
+  finally{ b.classList.remove('busy'); }
+}));
 
-/* ═══════════ الجمع والإرسال ═══════════ */
-const val=n=>{const i=$(`input[name="${n}"]:checked`); return i?i.value:'auto';};
-const vals=n=>$$(`input[name="${n}"]:checked`).map(i=>i.value);
+/* التبديلات الإضافية */
+$('#endOn').addEventListener('change',e=>{ $('#endf').hidden=!e.target.checked; });
+function toast(m){const t=$('#toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3200);}
+
+/* ═══════════ التجميع والإرسال ═══════════ */
+function val(n){return ($(`input[name="${n}"]:checked`)||{}).value||null;}
+function vals(n){return [...$$(`input[name="${n}"]:checked`)].map(i=>i.value);}
 function collect(){
-  const f=$('#f');
-  let identity={mode:'auto'};
-  if(idMode==='palette'&&$('input[name=palette]:checked')){ identity={mode:'palette',palette:val('palette'),colors:currentColors()}; }
+  const f=$('#f'); let identity={mode:idMode};
+  if(idMode==='palette'){ const p=val('palette'); if(p) identity.palette=p; }
   else if(idMode==='custom'){ identity={mode:'custom',colors:currentColors()}; }
   else if(idMode==='url'&&f.url.value.trim()){ identity={mode:'url',url:f.url.value.trim()}; }
   if(logoData) identity.logo=logoData;
   const vm=val('voiceMode');
-  const isIslamAIPreset=$('#islamaiToggle')?$('#islamaiToggle').checked:false;
   return {
     version:1, skip:false, note:f.note.value.trim(),
-    preset: isIslamAIPreset ? 'islamai' : null,
-    islamai_preset: isIslamAIPreset,
     identity,
     font:val('font'), capStyle:val('capStyle'), digits:val('digits')==='auto'?'western':val('digits'), pace:val('pace'),
     content:{type:val('ctype'),person:val('person')},
     orientation:vals('orientation').length?vals('orientation'):['9:16'],
     platforms:vals('platforms'), length:val('length'),
-    voice:{mode:vm, lang:vm==='tts'?(val('voiceLang')||'fusha'):null, gender:vm==='tts'?(val('voiceSex')||'auto'):null, tts:(vm==='tts'&&val('voice')&&val('voice')!=='auto')?val('voice'):null},   /* tts:null = كلود يجرّب الأصوات على النص ويختار — ما فيه صوت ثابت */
+    voice:{mode:vm, lang:vm==='tts'?(val('voiceLang')||'fusha'):null, gender:vm==='tts'?(val('voiceSex')||'auto'):null, tts:(vm==='tts'&&val('voice')&&val('voice')!=='auto')?val('voice'):null},
     bgAudio:val('bgAudio'), sfx:val('sfx'),
     endCard:{on:f.end_on.checked, handle:f.handle.value.trim(), cta:f.cta.value.trim(), word:f.word.value.trim()},
     answered:[...touched],
@@ -883,29 +759,24 @@ async function send(obj){
   if(!SERVER){ showDone(obj,false); return; }
   try{ const r=await fetch('/api/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)});
     const j=await r.json(); if(!j.ok) throw new Error(j.error||'x'); showDone(obj,true);
-  }catch(e){ btns.forEach(b=>b.disabled=false); toast('ما انحفظ — تأكد إن كلود للحين شغّال وجرّب مرة ثانية'); }
+  }catch(e){ btns.forEach(b=>b.disabled=false); toast('ما انحفظ — تأكد إن السيرفر شغّال وجرّب مرة ثانية'); }
 }
 function showDone(obj,saved){
   $('#doneOv').classList.add('show');
-  if(obj.skip){ $('#doneH').textContent='تمام، خلّها علي'; }
-  if(!saved){ $('#doneH').textContent='انسخ هذا وارسله لكلود'; $('#doneP').textContent='الصفحة مفتوحة بدون كلود، فما قدرت أحفظ بنفسي.';
+  if(obj.skip){ $('#doneH').textContent='تمام، كل الخيارات تلقائية'; }
+  if(!saved){ $('#doneH').textContent='تم التجهيز'; $('#doneP').textContent='الصفحة مفتوحة، انسخ البيانات لوكيل الذكاء الاصطناعي.';
     const o={...obj}; if(o.identity&&o.identity.logo) o.identity={...o.identity,logo:'(ارفع الشعار بالشات)'}; const pre=$('#doneJ'); pre.hidden=false; pre.textContent=JSON.stringify(o,null,2); }
 }
 $('#saveBtn').addEventListener('click',()=>send(collect()));
 $('#skipBtn').addEventListener('click',()=>send({version:1,skip:true,note:$('#note').value.trim()}));
 
-/* ═══════════ تعبئة من ملف سابق (لما يقول «غيّر إعداداتي») ═══════════ */
+/* ═══════════ تحميل الإعدادات السابقة إن وُجدت ═══════════ */
 async function prefill(){
   if(!SERVER) return;
   let p=null; try{ const r=await fetch('/api/profile'); if(r.ok) p=await r.json(); }catch(e){}
   if(!p||!p.version||p.skip) return;
   const f=$('#f');
   if(p.note) f.note.value=p.note;
-  if(p.islamai_preset===false){
-    applyIslamAIPreset(false, true);
-  } else if(p.islamai_preset===true || (p.identity&&p.identity.palette==='islamai')){
-    applyIslamAIPreset(true, true);
-  }
   const id=p.identity||{};
   if(id.mode==='palette'&&id.palette){ setRadio('palette',id.palette); }
   else if(id.mode==='custom'&&id.colors){ ['bg','ink','acc'].forEach(k=>{ if(id.colors[k]) f['c_'+k].value=id.colors[k].toLowerCase(); }); $('.tab[data-tab="custom"]').click(); }
@@ -914,29 +785,33 @@ async function prefill(){
   const R=(n,v)=>{ if(v&&v!=='auto') setRadio(n,v); };
   R('font',p.font); R('capStyle',p.capStyle); R('digits',p.digits); R('pace',p.pace);
   if(p.content){R('ctype',p.content.type);R('person',p.content.person);}
-  if(Array.isArray(p.orientation)&&p.orientation.length){   /* المحفوظ يستبدل الافتراضي (9:16) — لا يضيف عليه */
+  if(Array.isArray(p.orientation)&&p.orientation.length){
     $$('input[name=orientation]').forEach(i=>{i.checked=p.orientation.includes(i.value);}); }
   if(Array.isArray(p.platforms)) $$('input[name=platforms]').forEach(i=>{i.checked=p.platforms.includes(i.value);});
   R('length',p.length); R('bgAudio',p.bgAudio); R('sfx',p.sfx);
-  if(p.voice){ R('voiceMode',p.voice.mode); if(p.voice.lang) R('voiceLang',p.voice.lang); if(p.voice.gender) R('voiceSex',p.voice.gender); filterVoices(); if(p.voice.tts){ setRadio('voice',p.voice.tts); const i=$(`input[name=voice][value="${p.voice.tts}"]`); const d=i&&i.closest('details'); if(d) d.open=true; } }
+  if(p.voice){ R('voiceMode',p.voice.mode); if(p.voice.lang) R('voiceLang',p.voice.lang); if(p.voice.gender) R('voiceSex',p.voice.gender); if(p.voice.tts){ setRadio('voice',p.voice.tts); } }
   if(p.endCard&&p.endCard.on){ f.end_on.checked=true; $('#endf').hidden=false; f.handle.value=p.endCard.handle||''; f.cta.value=p.endCard.cta||''; f.word.value=p.endCard.word||''; }
   (p.answered||[]).forEach(g=>touched.add(g));
   syncOn(); applyPreview(); progress();
-  toast('فتحت إعداداتك السابقة — غيّر اللي تبيه');
+  toast('تم تحميل إعداداتك السابقة');
 }
-/* الافتراضي الظاهر */
-setRadio('ctype','auto'); setRadio('person','auto'); setRadio('length','auto'); setRadio('voiceMode','auto'); setRadio('bgAudio','auto'); setRadio('sfx','auto');
-setRadio('font','auto'); setRadio('capStyle','auto'); setRadio('pace','auto');
+
+/* الضبط الافتراضي العام النظيف */
+setRadio('palette','slate-cyan');
+setRadio('font','Cairo');
+setRadio('capStyle','card');
+setRadio('pace','fast');
+setRadio('ctype','auto'); setRadio('person','auto'); setRadio('length','auto'); setRadio('voiceMode','auto'); setRadio('bgAudio','auto'); setRadio('sfx','on');
 $('input[name=orientation][value="9:16"]').checked=true;
-// تفعيل قالب وتخصيصات إسلام آي كخيار افتراضي ذكي
-applyIslamAIPreset(true, true);
+$('input[name=platforms][value="instagram"]').checked=true;
+$('input[name=platforms][value="tiktok"]').checked=true;
 syncOn(); applyPreview(); progress(); prefill();
 </script>
 <script>
 (function(){ const on=document.getElementById('movesOn'), f=document.getElementById('movesf'), lab=document.getElementById('movesSaved');
   if(!on) return;
   const show=async()=>{ try{ const st=await (await fetch('/api/state')).json(); const m=st.moves||{}; const a=(m.on||[]).length, b=(m.off||[]).length;
-    lab.textContent = a||b ? `محفوظ: أبي ${a} · لا ${b}` : ''; if((a||b)&&!on.checked){on.checked=true; f.hidden=false;} }catch(e){} };
+    lab.textContent = a||b ? `محفوظ: أريد ${a} · لا ${b}` : ''; if((a||b)&&!on.checked){on.checked=true; f.hidden=false;} }catch(e){} };
   on.addEventListener('change',()=>{ f.hidden=!on.checked; });
   window.addEventListener('focus',show); show();
 })();

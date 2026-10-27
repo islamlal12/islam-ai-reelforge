@@ -157,16 +157,18 @@ python3 scripts/01_cut_plan.py <work>
 bash scripts/02b_enhance_audio.sh <work> --local
 ```
 
-### 4) التفريغ بتوقيت الكلمة
+### 4) التفريغ بتوقيت الكلمة ومحو التلعثم
+
+استخدم سكربت التفريغ الذكي (يفرّغ بأعلى دقة ويمحو التردد وتكرار الكلمات تلقائياً):
 
 ```bash
 ffmpeg -v error -i <work>/src.mov -vn -ac 1 -ar 16000 -y <work>/a.wav
-python -m whisper <work>/a.wav --language ar --model "C:\Users\PC\.cache\whisper\large-v3-turbo.pt" --word_timestamps True \
-  --output_format json --output_dir <work> --fp16 False --verbose False > <work>/whisper.log 2>&1
+# الموديل الافتراضي هو المستوى العالي (large-v3-turbo / large-v3) أو اختر الموديل المناسب:
+python scripts/01b_transcribe.py <work> --model large-v3-turbo
 ```
 
-- ياخذ دقايق — شغّله بالخلفية، وقل له كم يتوقع.
-- فشل؟ `tail -5 <work>/whisper.log`
+- الموديل الافتراضي هو المستوى العالي دائمًا (`large-v3-turbo` أو `large-v3`)، وإذا لم يكن محملاً محلياً فسيقوم Whisper بتنزيله تلقائياً.
+- يمكن للوكيل أو المستخدم اختيار موديل أخف بحسب قدرات الجهاز (مثل `--model medium` أو `--model small`).
 
 ### 5) التصحيح والكابشن
 

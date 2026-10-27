@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 ===================================================================================
-Islam AI ReelForge — The Complete Zero-Click AI Video & Reels Editor
-Author & Vision: Islam (Islam AI)
+ReelForge AI — Zero-Click AI Video & Reels Editor
+Autonomous AI-driven Video Production Engine
 ===================================================================================
 Automates high-retention video editing directly from code:
 - Removes dead air & stutters automatically
-- Transcribes with word-level Arabic timestamps using Whisper (large-v3-turbo)
-- Adds kinetic Arabic captions with Islam AI visual styling (Readex Pro, #0C68E9 & #F97316)
+- Transcribes with word-level Arabic timestamps using high-tier Whisper
+- Adds kinetic Arabic captions with customizable styling (Default: Sleek Slate & Sky Blue, Cairo font)
 - Dynamic camera zooms and face-tracking reframe
 - Broadcast audio mastering to -14.0 LUFS
 - Multi-platform exports: Final MP4 + CapCut Project
@@ -34,14 +34,15 @@ ROOT_DIR = Path(__file__).resolve().parent
 SCRIPTS_DIR = ROOT_DIR / "scripts"
 FONTS_DIR = ROOT_DIR / "motion" / "fonts"
 
+# Universal, modern, neutral default theme (Slate Dark & Sky Blue)
 DEFAULT_THEME = {
-    "bg": "#0C68E9",       # Islam AI Blue
-    "ink": "#FFFFFF",      # Crisp White Text
-    "acc": "#F97316",      # Vibrant Orange Highlight
-    "clay": "#60A5FA",     # Accent Secondary
-    "mut": "#EFF6FF",      # Muted Background
-    "font": "Readex Pro",  # Default Typography
-    "capStyle": "big",     # High-retention kinetic caption style
+    "bg": "#0F172A",       # Deep Slate Dark
+    "ink": "#F8FAFC",      # Crisp White Text
+    "acc": "#38BDF8",      # Sky Blue Accent
+    "clay": "#0284C7",     # Accent Secondary
+    "mut": "#94A3B8",      # Muted Subtext
+    "font": "Cairo",       # Universal Arabic Font
+    "capStyle": "card",    # High-contrast modern card caption style
     "grade": False,
     "faceAnchor": 0.30
 }
@@ -49,13 +50,13 @@ DEFAULT_THEME = {
 def banner():
     print(r"""
 ===============================================================================
-       ___     __                  ___    ____     ____           __ 
-      /  _/___/ /___ _____ ___    /   |  /  _/    / __ \___  ___ / /_
-      / / / __  / __ `/ __ `__ \  / /| |  / /    / /_/ / _ \/ _ \/ //_/
-    _/ / / /_/ / /_/ / / / / / / / ___ |_/ /    / _, _/  __/  __/ ,< 
-   /___/ \__,_/\__,_/_/ /_/ /_/ /_/  |_/___/   /_/ |_|\___/\___/_/|_|  
-                                                                         
-                Zero-Click AI Video & Reels Engine by Islam AI           
+       ____           __ ______                       ___    ____ 
+      / __ \___  ___ / // ____/___  _________ ____   /   |  /  _/ 
+     / /_/ / _ \/ _ \/ // /_  / __ \/ ___/ __ `/ _ \ / /| |  / /   
+    / _, _/  __/  __/ // __/ / /_/ / /  / /_/ /  __// ___ |_/ /    
+   /_/ |_|\___/\___/_//_/    \____/_/   \__, /\___//_/  |_/___/    
+                                       /____/                      
+                  Autonomous AI Video & Reels Engine               
 ===============================================================================
     """)
 
@@ -69,7 +70,7 @@ def check_dependencies():
         print(f"⚠️  Missing prerequisites: {', '.join(missing)}")
         print("Please ensure FFmpeg and Node.js are installed and in your system PATH.")
         if "ffmpeg" in missing:
-            print("  - Install FFmpeg: https://ffmpeg.org/download.html (or 'winget install Gyan.FFmpeg' on Windows)")
+            print("  - Install FFmpeg: https://ffmpeg.org/download.html")
         if "node" in missing:
             print("  - Install Node.js: https://nodejs.org/")
         return False
@@ -80,15 +81,32 @@ def setup_workdir(video_path, work_dir, theme_override=None):
     work = Path(work_dir).resolve()
     work.mkdir(parents=True, exist_ok=True)
     
+    # Check if a user profile exists from onboarding
+    home_profile = Path.home() / ".video-ad-editor" / "profile.json"
+    theme_data = DEFAULT_THEME.copy()
+    
+    if home_profile.exists():
+        try:
+            p = json.loads(home_profile.read_text(encoding="utf-8"))
+            idn = p.get("identity") or {}
+            cols = idn.get("colors")
+            if cols:
+                theme_data.update(cols)
+            if p.get("font") and p["font"] != "auto":
+                theme_data["font"] = p["font"]
+            if p.get("capStyle") and p["capStyle"] != "auto":
+                theme_data["capStyle"] = p["capStyle"]
+        except Exception:
+            pass
+
     # Copy source video
     src_video = work / "src.mp4"
     if not src_video.exists():
         print(f"📁 Copying source video into workspace -> {src_video}")
         shutil.copy2(video_path, src_video)
         
-    # Write theme.json (Islam AI Signature Identity)
+    # Write theme.json
     theme_file = work / "theme.json"
-    theme_data = DEFAULT_THEME.copy()
     if theme_override:
         theme_data.update(theme_override)
     with open(theme_file, "w", encoding="utf-8") as f:
@@ -110,28 +128,24 @@ def extract_audio(src_video, work):
         subprocess.run(cmd, check=True)
     return a_wav
 
-def run_silence_cut(work, threshold=-30, min_silence=0.35):
+def run_silence_cut(work):
     """Analyzes audio and generates cut.json to eliminate dead air."""
     print("✂️  Analyzing silences and hesitations...")
     cut_script = SCRIPTS_DIR / "01_cut_plan.py"
     if cut_script.exists():
         cmd = [sys.executable, str(cut_script), str(work)]
         subprocess.run(cmd, check=True)
-    else:
-        # Fallback simple cut if script missing
-        a_wav = work / "a.wav"
-        print("  - Running silence detection...")
 
-def run_transcription(work):
+def run_transcription(work, model_tier="large-v3-turbo"):
     """Transcribes audio with word-level Arabic timestamps & cleans stutters."""
-    print("🎙️  Running word-level Arabic transcription (Whisper large-v3-turbo)...")
+    print(f"🎙️  Running word-level Arabic transcription (Whisper: {model_tier})...")
     transcribe_script = SCRIPTS_DIR / "01b_transcribe.py"
-    cmd = [sys.executable, str(transcribe_script), str(work)]
+    cmd = [sys.executable, str(transcribe_script), str(work), "--model", model_tier]
     subprocess.run(cmd, check=True)
 
 def generate_captions(work):
     """Builds animated caption cards on the active timeline."""
-    print("💬 Generating animated captions (Readex Pro + Islam AI Palette)...")
+    print("💬 Generating animated captions...")
     caps_script = SCRIPTS_DIR / "02_captions.py"
     cmd = [sys.executable, str(caps_script), str(work)]
     subprocess.run(cmd, check=True)
@@ -173,12 +187,12 @@ def export_capcut(work):
 def main():
     banner()
     parser = argparse.ArgumentParser(
-        description="Islam AI ReelForge — Zero-Click AI Video & Reels Editor",
+        description="ReelForge AI — Zero-Click AI Video & Reels Editor",
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("video", help="Path to raw talking-head video (MP4/MOV)")
     parser.add_argument("--work", default="workspace_reel", help="Workspace folder name (default: workspace_reel)")
-    parser.add_argument("--platform", choices=["instagram", "tiktok", "all"], default="all", help="Target platform CTA adaptation")
+    parser.add_argument("--model", choices=["large-v3", "large-v3-turbo", "medium", "small", "base"], default="large-v3-turbo", help="Whisper model tier (default: large-v3-turbo)")
     parser.add_argument("--capcut", action="store_true", help="Also export as an editable CapCut project")
     parser.add_argument("--cover", help="Generate first-frame cover with headline: 'Line 1|*Colored Line 2*'")
     
@@ -198,7 +212,7 @@ def main():
     # Pipeline execution
     extract_audio(src_video, work)
     run_silence_cut(work)
-    run_transcription(work)
+    run_transcription(work, model_tier=args.model)
     generate_captions(work)
     apply_zooms_and_cuts(work)
     render_motion_frames(work)
