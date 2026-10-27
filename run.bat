@@ -1,2 +1,2 @@
 @echo off
-call ram.bat
+call rand.bat

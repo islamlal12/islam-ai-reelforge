@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-./ram.sh
+./rand.sh
