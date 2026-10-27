@@ -141,9 +141,9 @@ islam-ai-reelforge/
 - **شركة أو علامة تجارية:** تريد تحويل مراجعات المنتجات (UGC) إلى مئات الإعلانات البيعية أسبوعياً بتكلفة شبه صفرية.
 - **وكالة تسويق:** ترغب في دمج هذا النظام داخل سيرفراتك الخاصة لتقديم خدمة المونتاج الآلي لعملائك بربحية فائقة.
 
-📩 **تواصل مع إسلام (Islam AI):**
-- **GitHub:** [Islam Ai](https://web.islamai.cloud/)
-- **(Whatsap)[https://api.whatsapp.com/send/?phone=213776498400&text&type=phone_number&app_absent=0] / Contact:** تواصل معنا لمناقشة شراكات العمل والحلول المؤسسية المخصصة.
+📩 **تواصل مع إسلام:**
+- **Website:** [Islam Laloui](https://web.islamai.cloud/)
+- **[Whatsap](https://api.whatsapp.com/send/?phone=213776498400&text&type=phone_number&app_absent=0) / Contact:** تواصل معنا لمناقشة شراكات العمل والحلول المؤسسية المخصصة.
 
 ---
 
