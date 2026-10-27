@@ -1,0 +1,7 @@
+# Islam AI ReelForge Dependencies
+openai-whisper>=20231117
+torch>=2.0.0
+numpy>=1.24.0
+Pillow>=9.5.0
+requests>=2.28.0
+faster-whisper>=1.0.0

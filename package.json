@@ -1,0 +1,15 @@
+{
+  "name": "islam-ai-reelforge",
+  "version": "1.0.0",
+  "description": "Zero-Click AI Video & Reels Engine by Islam AI",
+  "main": "reelforge.py",
+  "scripts": {
+    "start": "python reelforge.py",
+    "render": "node scripts/04_render_frames.js"
+  },
+  "dependencies": {
+    "puppeteer": "^22.0.0"
+  },
+  "author": "Islam AI",
+  "license": "MIT"
+}
