@@ -128,12 +128,12 @@ def extract_audio(src_video, work):
         subprocess.run(cmd, check=True)
     return a_wav
 
-def denoise_audio(work, strength=0.85, engine="auto"):
+def denoise_audio(work, strength=0.85, engine="auto", model="default"):
     """Intelligently cleans background noise (AC, street, hiss) via AI DeepFilterNet / FFmpeg FFT."""
     denoise_script = SCRIPTS_DIR / "02c_denoise.py"
     if denoise_script.exists():
-        print(f"🧹 Running intelligent audio denoising (Engine: {engine}, Strength: {strength})...")
-        cmd = [sys.executable, str(denoise_script), str(work), "--engine", engine, "--strength", str(strength)]
+        print(f"🧹 Running intelligent audio denoising (Engine: {engine}, Strength: {strength}, Model: {model})...")
+        cmd = [sys.executable, str(denoise_script), str(work), "--engine", engine, "--strength", str(strength), "--model", model]
         try:
             subprocess.run(cmd, check=True)
         except Exception as e:
@@ -206,6 +206,7 @@ def main():
     parser.add_argument("--model", choices=["large-v3", "large-v3-turbo", "medium", "small", "base"], default="large-v3-turbo", help="Whisper model tier (default: large-v3-turbo)")
     parser.add_argument("--denoise", choices=["auto", "dfn", "ffmpeg", "off"], default="auto", help="Smart AI/FFT noise reduction engine (default: auto)")
     parser.add_argument("--denoise-strength", type=float, default=0.85, help="Denoising strength 0.0 to 1.0 (default: 0.85)")
+    parser.add_argument("--denoise-model", default="default", help="Optional DeepFilterNet model checkpoint name/path (default: embedded/cache)")
     parser.add_argument("--capcut", action="store_true", help="Also export as an editable CapCut project")
     parser.add_argument("--cover", help="Generate first-frame cover with headline: 'Line 1|*Colored Line 2*'")
     
@@ -225,7 +226,7 @@ def main():
     # Pipeline execution
     extract_audio(src_video, work)
     if args.denoise != "off":
-        denoise_audio(work, strength=args.denoise_strength, engine=args.denoise)
+        denoise_audio(work, strength=args.denoise_strength, engine=args.denoise, model=args.denoise_model)
     run_silence_cut(work)
     run_transcription(work, model_tier=args.model)
     generate_captions(work)

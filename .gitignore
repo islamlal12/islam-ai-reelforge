@@ -47,12 +47,13 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Binaries and Models (dynamic caching)
-bin/*.exe
-bin/deep-filter*
-*.exe
+# AI Models & Checkpoint Weights (Cached dynamically in ~/.cache/, never in repo)
 *.pt
 *.bin
+*.tar.gz
+*.onnx
+*.safetensors
+models/
 profile.json
 
 # OS specific
