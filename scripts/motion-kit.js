@@ -17,6 +17,7 @@
   const eExpo = k => k >= 1 ? 1 : 1 - Math.pow(2, -10 * k);
   const eBack = k => { const s = 1.7; k = k - 1; return k * k * ((s + 1) * k + s) + 1; };
   const spring = k => k >= 1 ? 1 : 1 - Math.exp(-6 * k) * Math.cos(12 * k);
+  const eInOut = k => k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
   const C = () => G.X;                                  // كانفس المحرّك
   const col = n => ({ BG: G.BG || '#F3EFEA', INK: G.INK || '#1F1F1D', ACC: G.ACC || '#D97757', CLAY: G.CLAY || '#BD5D3A', MUT: G.MUT || '#8A847A' })[n];
   const font = (w, s) => w + ' ' + s + 'px ' + (G.FONT || 'Cairo');
@@ -29,7 +30,7 @@
   const noShadow = () => { const X = C(); X.shadowColor = 'transparent'; X.shadowBlur = 0; X.shadowOffsetY = 0; };
 
   const MK = {};
-  MK.ease = { eo, eExpo, eBack, spring };
+  MK.ease = { eo, eExpo, eBack, spring, eInOut };
 
   /* 🔢 عدّاد بعجلات — كل خانة بعرض ثابت وتدوّر؛ يخبط بآخره (تكبير + ارتداد). o: {s, dur, val, cx, cy, size, color, prefix, suffix, slam} */
   MK.odometer = function (t, o) {
@@ -251,6 +252,360 @@
       X.restore();
       if (hk > 0 && hk < 1) { X.save(); X.globalAlpha = (1 - hk) * 0.6; X.strokeStyle = o.hotColor || '#E5484D'; X.lineWidth = 4; X.beginPath(); X.arc(cx, cy, r * (1 + hk * 1.6), 0, 7); X.stroke(); X.restore(); }
     }
+    X.restore();
+  };
+
+  /* 💻 شريط أوامر الذكاء الاصطناعي (AI Prompt Bar) — o: {s, e, box, text, cps, delay, btnColor, font, bg, rtl} */
+  MK.promptBar = function (t, o) {
+    if (!live(t, o)) return; const X = C();
+    // صندوق افتراضي: في ثلث الشاشة العلوي (22.5% من 1920 = y 432)، بعرض 92.6% (1000 بكسل)
+    const b = Object.assign({ x: 40, y: 382, w: 1000, h: 100 }, o.box);
+    const k = eBack(pr(t, o.s, o.s + 0.45)); if (k <= 0) return;
+    const txt = o.text || 'Write code with AI...';
+    const cps = o.cps || 20, delay = o.delay != null ? o.delay : 0.25;
+    const n = Math.floor(cl((t - o.s - delay) * cps, 0, txt.length));
+    const btnCol = o.btnColor || col('ACC'), r = b.h / 2;
+    const isRtl = o.rtl != null ? o.rtl : /[\u0600-\u06FF]/.test(txt);
+
+    X.save(); X.globalAlpha *= cl(k, 0, 1) * out(t, o);
+    X.translate(b.x + b.w / 2, b.y + b.h / 2);
+    const sc = lerp(0.9, 1, cl(k, 0, 1.1));
+    X.scale(sc, sc);
+    X.translate(-b.w / 2, -b.h / 2);
+
+    // كبسولة مظلمة دارك بيل (#2B2B2B) بحواف دائرية وظل ناعم
+    shadow(35, 12, 0.25);
+    X.fillStyle = o.bg || '#2B2B2B';
+    rrp(0, 0, b.w, b.h, r); X.fill();
+    noShadow();
+    X.strokeStyle = 'rgba(255,255,255,0.08)'; X.lineWidth = 2;
+    rrp(0, 0, b.w, b.h, r); X.stroke();
+
+    // زر الإرسال البرتقالي مع سهم للأعلى (ينبض عند اكتمال الكتابة)
+    const btnR = b.h * 0.38;
+    const btnX = isRtl ? r : (b.w - r);
+    const btnY = b.h / 2;
+    const sendK = n >= txt.length ? 1 + 0.08 * Math.sin((t - o.s) * 8) : 1;
+
+    X.save(); X.translate(btnX, btnY); X.scale(sendK, sendK);
+    X.fillStyle = btnCol; X.beginPath(); X.arc(0, 0, btnR, 0, Math.PI * 2); X.fill();
+    X.strokeStyle = '#FFFFFF'; X.lineWidth = Math.max(3, b.h * 0.045); X.lineCap = 'round'; X.lineJoin = 'round';
+    X.beginPath();
+    X.moveTo(0, btnR * 0.38); X.lineTo(0, -btnR * 0.38);
+    X.moveTo(-btnR * 0.35, -btnR * 0.05); X.lineTo(0, -btnR * 0.38); X.lineTo(btnR * 0.35, -btnR * 0.05);
+    X.stroke();
+    X.restore();
+
+    // كتابة النص بخط تايب رايتر + مؤشر وامض
+    X.fillStyle = o.textColor || '#FFFFFF';
+    X.font = o.font || ('600 ' + Math.round(b.h * 0.34) + 'px "Courier New", Menlo, Monaco, Consolas, monospace, ' + (G.FONT || 'Cairo'));
+    X.textBaseline = 'middle';
+
+    const sub = txt.slice(0, n);
+    if (isRtl) {
+      X.direction = 'rtl'; X.textAlign = 'right';
+      const startX = b.w - r * 0.8;
+      X.fillText(sub, startX, b.h / 2 + 2);
+      if (n < txt.length || Math.floor(t * 3.5) % 2 === 0) {
+        const tw = X.measureText(sub).width;
+        X.fillStyle = btnCol;
+        X.fillRect(startX - tw - 8, b.h * 0.28, 4, b.h * 0.44);
+      }
+    } else {
+      X.direction = 'ltr'; X.textAlign = 'left';
+      const startX = r * 0.8;
+      X.fillText(sub, startX, b.h / 2 + 2);
+      if (n < txt.length || Math.floor(t * 3.5) % 2 === 0) {
+        const tw = X.measureText(sub).width;
+        X.fillStyle = btnCol;
+        X.fillRect(startX + tw + 6, b.h * 0.28, 4, b.h * 0.44);
+      }
+    }
+    X.restore();
+  };
+
+  /* 🏷️ ملصق الأداة المنزلق (Logo slides left + Name slides right) — o: {s, e, cy, name, logoImg, logo, size, font, logoBg, nameColor, dur1, dur2, rtl} */
+  MK.toolLabel = function (t, o) {
+    if (!live(t, o)) return; const X = C();
+    const dur1 = o.dur1 || (12 / 30);   // 12 فريم عند 30fps لظهور الشعار
+    const dur2 = o.dur2 || (12 / 30);   // 12 فريم لانزلاق الشعار وخروج الاسم
+    const k1 = eo(pr(t, o.s, o.s + dur1)); if (k1 <= 0) return;
+    const k2 = eo(pr(t, o.s + dur1, o.s + dur1 + dur2));
+    const size = o.size || 110, name = o.name || 'Tool';
+    const cy = o.cy || 1180;            // 61.5% من 1920
+    const gap = o.gap || 24;
+    const cx = o.cx || 540;
+    const isRtl = o.rtl != null ? o.rtl : /[\u0600-\u06FF]/.test(name);
+
+    X.save(); X.globalAlpha *= cl(k1 * 1.5, 0, 1) * out(t, o);
+    X.font = o.font || font(900, Math.round(size * 0.82));
+    const tw = X.measureText(name).width;
+    const totalW = size + gap + tw;
+
+    if (!isRtl) {
+      // إنجليزي / LTR: الشعار يستقر يساراً والاسم يميناً متمركزين معاً في المنتصف
+      const finalLx = cx - totalW / 2 + size / 2;
+      const finalNx = cx - totalW / 2 + size + gap;
+      const lx = lerp(cx, finalLx, k2);
+      const nx = lerp(cx - tw / 2, finalNx, k2);
+
+      // خروج الاسم من خلف الشعار لليمين بقناع كليبينغ يبدأ من حافة الشعار
+      if (k2 > 0) {
+        X.save();
+        X.globalAlpha *= cl(k2 * 1.4, 0, 1);
+        const clipLeft = lx + size * 0.45;
+        const clipW = Math.max(0, lerp(0, finalNx + tw + 20 - clipLeft, k2));
+        X.beginPath(); X.rect(clipLeft, cy - size, clipW, size * 2); X.clip();
+        X.fillStyle = o.nameColor || '#FFFFFF';
+        shadow(25, 8, 0.3);
+        X.direction = 'ltr'; X.textAlign = 'left'; X.textBaseline = 'middle';
+        X.fillText(name, nx, cy + 2);
+        noShadow(); X.restore();
+      }
+
+      // رسم الشعار في مكانه الحالي ومرفوع فوق النص
+      X.save(); X.translate(lx, cy); X.scale(cl(k1, 0, 1), cl(k1, 0, 1));
+      shadow(35, 10, 0.22);
+      if (o.logoImg && o.logoImg.complete && o.logoImg.naturalWidth) {
+        X.save(); rrp(-size / 2, -size / 2, size, size, size * 0.24); X.clip();
+        X.drawImage(o.logoImg, -size / 2, -size / 2, size, size);
+        X.restore();
+      } else {
+        X.fillStyle = o.logoBg || col('ACC');
+        rrp(-size / 2, -size / 2, size, size, size * 0.24); X.fill();
+        X.fillStyle = '#FFFFFF';
+        const glyph = o.logo || name.slice(0, 1).toUpperCase();
+        X.font = font(900, Math.round(size * (glyph.length > 2 ? 0.35 : 0.5)));
+        X.direction = 'ltr'; X.textAlign = 'center'; X.textBaseline = 'middle';
+        X.fillText(glyph, 0, 2);
+      }
+      noShadow(); X.restore();
+    } else {
+      // عربي / RTL: الشعار يستقر يميناً والاسم يساراً متمركزين معاً في المنتصف
+      const finalLx = cx + totalW / 2 - size / 2;
+      const finalNx = cx + totalW / 2 - size - gap;
+      const lx = lerp(cx, finalLx, k2);
+      const nx = lerp(cx + tw / 2, finalNx, k2);
+
+      if (k2 > 0) {
+        X.save();
+        X.globalAlpha *= cl(k2 * 1.4, 0, 1);
+        const clipRight = lx - size * 0.45;
+        const clipW = Math.max(0, lerp(0, clipRight - (finalNx - tw - 20), k2));
+        X.beginPath(); X.rect(clipRight - clipW, cy - size, clipW, size * 2); X.clip();
+        X.fillStyle = o.nameColor || '#FFFFFF';
+        shadow(25, 8, 0.3);
+        X.direction = 'rtl'; X.textAlign = 'right'; X.textBaseline = 'middle';
+        X.fillText(name, nx, cy + 2);
+        noShadow(); X.restore();
+      }
+
+      X.save(); X.translate(lx, cy); X.scale(cl(k1, 0, 1), cl(k1, 0, 1));
+      shadow(35, 10, 0.22);
+      if (o.logoImg && o.logoImg.complete && o.logoImg.naturalWidth) {
+        X.save(); rrp(-size / 2, -size / 2, size, size, size * 0.24); X.clip();
+        X.drawImage(o.logoImg, -size / 2, -size / 2, size, size);
+        X.restore();
+      } else {
+        X.fillStyle = o.logoBg || col('ACC');
+        rrp(-size / 2, -size / 2, size, size, size * 0.24); X.fill();
+        X.fillStyle = '#FFFFFF';
+        const glyph = o.logo || name.slice(0, 1).toUpperCase();
+        X.font = font(900, Math.round(size * (glyph.length > 2 ? 0.35 : 0.5)));
+        X.direction = 'rtl'; X.textAlign = 'center'; X.textBaseline = 'middle';
+        X.fillText(glyph, 0, 2);
+      }
+      noShadow(); X.restore();
+    }
+
+    X.restore();
+  };
+
+  /* 🐙 بطاقة مستودع جيت هاب (GitHub Repo Card) — o: {s, e, box, repo:'owner/name', desc:'...', stars:1420, forks:120, language:'TypeScript', langColor:'#3178C6', dur} */
+  MK.repoCard = function (t, o) {
+    if (!live(t, o)) return; const X = C();
+    // 85% من عرض الإطار = 918 بكسل، متمركزة بأعلى الإطار مع صعود 2% (38.4 بكسل) في 12 فريم
+    const b = Object.assign({ x: 81, y: 190, w: 918, h: 220 }, o.box);
+    const dur = o.dur || (12 / 30);   // 12 فريم عند 30fps
+    const k = eo(pr(t, o.s, o.s + dur)); if (k <= 0) return;
+    const rise = (1 - k) * (1920 * 0.02); // صعود 2%
+
+    X.save(); X.globalAlpha *= cl(k * 1.5, 0, 1) * out(t, o);
+    X.translate(0, rise);
+
+    // بطاقة بالثيم الداكن لجيت هاب (#0D1117) مع إطار (#30363D)
+    shadow(40, 15, 0.28);
+    X.fillStyle = '#0D1117'; rrp(b.x, b.y, b.w, b.h, 20); X.fill();
+    noShadow();
+    X.strokeStyle = '#30363D'; X.lineWidth = 2; rrp(b.x, b.y, b.w, b.h, 20); X.stroke();
+
+    // اسم المستودع (أزرق جيت هاب #58A6FF)
+    const repoText = o.repo || 'owner/repo';
+    X.direction = 'ltr'; X.textBaseline = 'alphabetic';
+    X.font = font(800, 34); X.fillStyle = '#58A6FF'; X.textAlign = 'left';
+    X.fillText(repoText, b.x + 36, b.y + 62);
+
+    // بادج Public
+    const rw = X.measureText(repoText).width;
+    const bw = 80, bh = 30, bx = b.x + 36 + rw + 16, by = b.y + 36;
+    X.strokeStyle = '#30363D'; X.lineWidth = 1.5; rrp(bx, by, bw, bh, 15); X.stroke();
+    X.fillStyle = '#8B949E'; X.font = font(700, 18); X.textAlign = 'center';
+    X.fillText('Public', bx + bw / 2, by + 21);
+
+    // وصف المستودع
+    if (o.desc) {
+      X.fillStyle = '#C9D1D9'; X.font = font(600, 24); X.textAlign = 'left';
+      X.fillText(o.desc, b.x + 36, b.y + 118);
+    }
+
+    // شريط المعلومات السفلي (لغة البرمجة + النجوم + الفروك)
+    const sy = b.y + b.h - 36;
+    let curX = b.x + 36;
+
+    // لغة البرمجة (اختيارية)
+    if (o.language) {
+      X.fillStyle = o.langColor || '#3178C6';
+      X.beginPath(); X.arc(curX + 8, sy - 8, 7, 0, Math.PI * 2); X.fill();
+      X.fillStyle = '#8B949E'; X.font = font(700, 22); X.textAlign = 'left';
+      X.fillText(o.language, curX + 24, sy);
+      curX += 24 + X.measureText(o.language).width + 32;
+    }
+
+    // أيقونة النجمة وعدد النجوم
+    const starText = kfmt(o.stars || 0) + ' stars';
+    X.fillStyle = '#E3B341';
+    const sx0 = curX + 8, sy0 = sy - 9;
+    X.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const aOuter = -Math.PI / 2 + i * Math.PI * 2 / 5;
+      const aInner = aOuter + Math.PI / 5;
+      if (i === 0) X.moveTo(sx0 + Math.cos(aOuter) * 8, sy0 + Math.sin(aOuter) * 8);
+      else X.lineTo(sx0 + Math.cos(aOuter) * 8, sy0 + Math.sin(aOuter) * 8);
+      X.lineTo(sx0 + Math.cos(aInner) * 4, sy0 + Math.sin(aInner) * 4);
+    }
+    X.closePath(); X.fill();
+
+    X.fillStyle = '#8B949E'; X.font = font(700, 22); X.textAlign = 'left';
+    X.fillText(starText, curX + 24, sy);
+    curX += 24 + X.measureText(starText).width + 32;
+
+    // أيقونة الفروك وعدد الفروك
+    const forkText = kfmt(o.forks || 0) + ' forks';
+    X.fillStyle = '#8B949E';
+    const fx0 = curX + 8, fy0 = sy - 9;
+    X.strokeStyle = '#8B949E'; X.lineWidth = 2;
+    X.beginPath();
+    X.moveTo(fx0 - 4, fy0 - 6); X.lineTo(fx0 - 4, fy0);
+    X.lineTo(fx0, fy0 + 4); X.lineTo(fx0, fy0 + 7);
+    X.moveTo(fx0 + 4, fy0 - 6); X.lineTo(fx0 + 4, fy0);
+    X.lineTo(fx0, fy0 + 4);
+    X.stroke();
+    X.beginPath(); X.arc(fx0 - 4, fy0 - 6, 2.5, 0, Math.PI * 2); X.fill();
+    X.beginPath(); X.arc(fx0 + 4, fy0 - 6, 2.5, 0, Math.PI * 2); X.fill();
+    X.beginPath(); X.arc(fx0, fy0 + 7, 2.5, 0, Math.PI * 2); X.fill();
+
+    X.fillText(forkText, curX + 24, sy);
+
+    X.restore();
+  };
+
+  /* 🎚️ مسح المقارنة قبل/بعد (Before/After Wipe Slider) — o: {s, e, dur, box, dir:'rtl'|'ltr', drawBefore, drawAfter, beforeImg, afterImg, beforeLabel, afterLabel, lineColor, lineWidth, handleRadius} */
+  MK.wipeSlider = function (t, o) {
+    if (!live(t, o)) return; const X = C();
+    const dur = o.dur || 1.0;          // 30 فريم (1 ثانية عند 30fps)
+    const b = Object.assign({ x: 0, y: 0, w: 1080, h: 1920 }, o.box);
+    const k = eInOut(pr(t, o.s, o.s + dur));
+    const dir = o.dir || 'rtl';        // المسح من اليمين لليسار كما في دليل Chandler
+
+    const wipeX = dir === 'rtl' ? lerp(b.x + b.w, b.x, k) : lerp(b.x, b.x + b.w, k);
+
+    X.save(); X.globalAlpha *= out(t, o);
+
+    // 1. رسم نسخة «قبل» (Before)
+    const beforeW = dir === 'rtl' ? (wipeX - b.x) : (b.x + b.w - wipeX);
+    const beforeX = dir === 'rtl' ? b.x : wipeX;
+    if (beforeW > 0) {
+      X.save();
+      X.beginPath(); X.rect(beforeX, b.y, beforeW, b.h); X.clip();
+      if (o.beforeImg && o.beforeImg.complete && o.beforeImg.naturalWidth) {
+        X.drawImage(o.beforeImg, b.x, b.y, b.w, b.h);
+      } else if (o.drawBefore) {
+        o.drawBefore(X);
+      }
+      X.restore();
+    }
+
+    // 2. رسم نسخة «بعد» (After)
+    const afterW = dir === 'rtl' ? (b.x + b.w - wipeX) : (wipeX - b.x);
+    const afterX = dir === 'rtl' ? wipeX : b.x;
+    if (afterW > 0) {
+      X.save();
+      X.beginPath(); X.rect(afterX, b.y, afterW, b.h); X.clip();
+      if (o.afterImg && o.afterImg.complete && o.afterImg.naturalWidth) {
+        X.drawImage(o.afterImg, b.x, b.y, b.w, b.h);
+      } else if (o.drawAfter) {
+        o.drawAfter(X);
+      }
+      X.restore();
+    }
+
+    // 3. الخط الفاصل العمودي والمقبض الدائري (يظهران أثناء المسح)
+    if (k > 0 && k < 1) {
+      // الخط الأبيض العمودي
+      shadow(20, 0, 0.4);
+      X.strokeStyle = o.lineColor || '#FFFFFF';
+      X.lineWidth = o.lineWidth || 3.5;
+      X.beginPath();
+      X.moveTo(wipeX, b.y);
+      X.lineTo(wipeX, b.y + b.h);
+      X.stroke();
+
+      // المقبض الدائري
+      const cy = b.y + b.h / 2;
+      const hr = o.handleRadius || 24;
+      X.fillStyle = '#FFFFFF';
+      X.beginPath(); X.arc(wipeX, cy, hr, 0, Math.PI * 2); X.fill();
+      X.fillStyle = col('INK') || '#1F1F1D';
+      X.beginPath(); X.arc(wipeX, cy, hr * 0.75, 0, Math.PI * 2); X.fill();
+
+      // سهمان متقابلان ◀ ▶ داخل المقبض
+      X.fillStyle = '#FFFFFF';
+      const aw = hr * 0.35, ah = hr * 0.3;
+      // سهم يسار ◀
+      X.beginPath();
+      X.moveTo(wipeX - aw - 1, cy);
+      X.lineTo(wipeX - 2, cy - ah);
+      X.lineTo(wipeX - 2, cy + ah);
+      X.closePath(); X.fill();
+      // سهم يمين ▶
+      X.beginPath();
+      X.moveTo(wipeX + aw + 1, cy);
+      X.lineTo(wipeX + 2, cy - ah);
+      X.lineTo(wipeX + 2, cy + ah);
+      X.closePath(); X.fill();
+      noShadow();
+
+      // ليبل اختياري للمقارنة (مثل قبل / بعد)
+      if (o.beforeLabel || o.afterLabel) {
+        X.font = font(700, 22);
+        X.textBaseline = 'middle';
+        if (o.beforeLabel && beforeW > 120) {
+          const bw0 = X.measureText(o.beforeLabel).width + 24;
+          const lx0 = dir === 'rtl' ? (b.x + 30) : (b.x + b.w - 30 - bw0);
+          X.fillStyle = 'rgba(0,0,0,0.6)'; rrp(lx0, b.y + 40, bw0, 36, 18); X.fill();
+          X.fillStyle = '#FFFFFF'; X.textAlign = 'center';
+          X.fillText(o.beforeLabel, lx0 + bw0 / 2, b.y + 58);
+        }
+        if (o.afterLabel && afterW > 120) {
+          const aw0 = X.measureText(o.afterLabel).width + 24;
+          const ax0 = dir === 'rtl' ? (b.x + b.w - 30 - aw0) : (b.x + 30);
+          X.fillStyle = 'rgba(0,0,0,0.6)'; rrp(ax0, b.y + 40, aw0, 36, 18); X.fill();
+          X.fillStyle = '#FFFFFF'; X.textAlign = 'center';
+          X.fillText(o.afterLabel, ax0 + aw0 / 2, b.y + 58);
+        }
+      }
+    }
+
     X.restore();
   };
 
