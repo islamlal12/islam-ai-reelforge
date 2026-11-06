@@ -128,6 +128,6 @@ def transcribe(work_dir, audio_file=None, model_choice=None):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Transcribe audio with Whisper")
     parser.add_argument("work_dir", nargs="?", default=".", help="Workspace directory")
-    parser.add_argument("--model", choices=["large-v3", "large-v3-turbo", "medium", "small", "base"], default=None, help="Whisper model tier")
+    parser.add_argument("--model", default=None, help="Whisper model tier or file path")
     args = parser.parse_args()
     transcribe(args.work_dir, model_choice=args.model)

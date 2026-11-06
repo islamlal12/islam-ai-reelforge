@@ -36,11 +36,17 @@
   - Editor Architect: Storyboard-First Protocol, Whip-Pan transitions, Freeze & Explain mode, and rapid caption rules in `SKILL.md` and `references/scenes.md`.
   - Lead Orchestrator: Synchronized installed skill and published to GitHub `islamlal12/islam-ai-reelforge`.
 
+- [x] **Milestone 6: Frame-Accurate Psychoacoustic Sound Design (Ultra Skills Rules)**
+  - Audio DSP Specialist: Upgraded `scripts/05_sfx.py` with `hero_hit` (3-layer Attack + Body + Sub), clamped risers (0.4-0.7s) with guillotine cut, speech collision guard against `caps.json` hot words, and quiet gaps.
+  - Sound Design Architect: Upgraded `references/sync-and-pro-audio-rules.md` and `references/scenes.md` with Frame-Action audio map and material matching rules.
+  - Skill Workflow Integrator: Upgraded `SKILL.md` in `ai-video-forge` and `video-ad-editor` with frame-accurate sound protocols and verified sync.
+  - Lead Orchestrator: Complete test validation, code review, and automated GitHub publishing.
+
 ---
 
 ## 📝 Current Trajectory
 
-- **Current Active Step:** Milestone 5 fully complete. Verified code quality, synchronized installed skill `video-ad-editor`, and pushed all changes to GitHub `origin/main`.
+- **Current Active Step:** Milestone 6 fully complete. Frame-accurate audio rules and 3-layer Hero DSP engine active and published to GitHub.
 
 ---
 
@@ -48,7 +54,7 @@
 
 | Agent | Task | Status | Notes |
 | :--- | :--- | :--- | :--- |
-| **Motion Engineer** | `MK.promptBar`, `MK.toolLabel`, `MK.repoCard`, `MK.wipeSlider` | ✅ Completed | Fully tested in `motion-kit.js` & documented |
-| **Vision & OS Engineer** | `rembg` Windows fallback in `_cutout.py` & docs | ✅ Completed | Cross-platform person segmentation & Haar cascade |
-| **Editor Architect** | Storyboard-First, Whip-Pan, Freeze & Explain in `SKILL.md` & `scenes.md` | ✅ Completed | Comprehensive retention rules & guidelines |
-| **Lead Orchestrator** | Code review, sync installed skill, and push to GitHub | ✅ Completed | Synced to `majed-video` and pushed to GitHub |
+| **Audio DSP Specialist** | `hero_hit` 3-layer, clamped risers & speech collision guard in `05_sfx.py` | ✅ Completed | Fully tested & verified |
+| **Sound Design Architect** | Frame-Action map, material matching & guidelines in audio references | ✅ Completed | Comprehensive audio documentation |
+| **Skill Workflow Integrator** | Update `SKILL.md`, sync `ai-video-forge`, and publish clean engine | ✅ Completed | Synced across all 4 skill locations |
+| **Lead Orchestrator** | Verification, testing, and GitHub release push | ✅ Completed | Published to GitHub origin/main |
