@@ -1,5 +1,5 @@
 ---
-name: video-ad-editor
+name: ai-video-forge
 description: يمنتج فيديو كلام للكاميرا إلى ريل أو إعلان 9:16 — يشيل السكتات، كابشن عربي بتوقيت الكلمة، وموشن قرافيكس بألوانه. Use when user says "منتج هذا المقطع"، "سو من هذا الفيديو إعلان"، "شيّل السكتات"، "حوّل الفيديو لريل"، "ركّب كابشن عربي"، "اقص الصمت"، or sends a talking-head video. Not for carousels or video covers.
 ---
 
