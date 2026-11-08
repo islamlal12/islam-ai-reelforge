@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
 """Automated Word-Level Arabic Transcription & Stutter Filter for AI Video Editor.
-Defaults to high-tier large model (large-v3-turbo) and allows dynamic agent/user model selection.
+Enforces MANDATORY speech enhancement/denoising before Whisper:
+Transcribes clean audio (a_clean.wav), NEVER raw noisy audio, using large-v3-turbo.
 """
-import os, sys, json, subprocess, re, argparse
+import os, sys, json, subprocess, re, argparse, importlib.util
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 except Exception:
     pass
+
+HERE = os.path.dirname(os.path.abspath(__file__))
 
 def get_whisper_model(requested_model=None):
     if requested_model:
@@ -20,16 +23,16 @@ def get_whisper_model(requested_model=None):
     if custom_env:
         return custom_env
 
-    # Check local cache for high-tier large models if already present
-    local_cache_turbo = os.path.expanduser(r"~/.cache/whisper/large-v3-turbo.pt")
+    # Prioritize permanent high-tier model cache
     local_pc_turbo = r"C:\Users\PC\.cache\whisper\large-v3-turbo.pt"
+    local_cache_turbo = os.path.expanduser(r"~/.cache/whisper/large-v3-turbo.pt")
     local_cache_large = os.path.expanduser(r"~/.cache/whisper/large-v3.pt")
 
     for path in [local_pc_turbo, local_cache_turbo, local_cache_large]:
         if os.path.exists(path):
             return path
 
-    # Default to high-tier large model (Whisper downloads it dynamically on first run)
+    # Default to high-tier large model
     return "large-v3-turbo"
 
 def remove_arabic_stutters(segments):
@@ -69,19 +72,61 @@ def remove_arabic_stutters(segments):
         print(f"✨ Auto-cleaned {total_stutters_removed} duplicate words/stutters from transcription.")
     return clean_segments
 
+def ensure_clean_audio(work_dir, explicit_audio=None):
+    """Ensures a clean, denoised audio track (a_clean.wav) exists before Whisper."""
+    if explicit_audio and os.path.isfile(explicit_audio):
+        return os.path.abspath(explicit_audio)
+
+    # 1. Check for dedicated clean audio files in workspace
+    for cand in ["a_clean.wav", "audio_clean.wav"]:
+        p = os.path.join(work_dir, cand)
+        if os.path.isfile(p):
+            print(f"🎙️ Using verified clean audio: {cand} (Zero noise / Pre-denoised)", flush=True)
+            return p
+
+    # 2. If a_clean.wav does not exist, trigger pre-whisper speech enhancement automatically
+    print(f"⚠️ Clean audio (a_clean.wav) not found in {work_dir}.")
+    print("🧹 Auto-initiating mandatory pre-whisper speech enhancement (DeepFilterNet 3 / FFmpeg)...", flush=True)
+    
+    denoise_script = os.path.join(HERE, "02c_denoise.py")
+    if os.path.isfile(denoise_script):
+        try:
+            spec = importlib.util.spec_from_file_location("denoise_mod", denoise_script)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            if hasattr(mod, "prepare_clean_audio_for_whisper"):
+                clean_path = mod.prepare_clean_audio_for_whisper(work_dir)
+                if os.path.isfile(clean_path):
+                    return clean_path
+        except Exception as ex:
+            print(f"⚠️ In-process denoising failed: {ex}. Running script via subprocess...", flush=True)
+            subprocess.run([sys.executable, denoise_script, work_dir], check=False)
+            clean_path = os.path.join(work_dir, "a_clean.wav")
+            if os.path.isfile(clean_path):
+                return clean_path
+
+    # Fallback to existing a.wav or audio/mic.wav only if enhancement failed
+    fallback_cands = [os.path.join(work_dir, "a.wav"), os.path.join(work_dir, "audio", "mic.wav")]
+    for p in fallback_cands:
+        if os.path.isfile(p):
+            print(f"⚠️ Falling back to audio file: {p}", flush=True)
+            return p
+
+    return None
+
 def transcribe(work_dir, audio_file=None, model_choice=None):
     work_dir = os.path.abspath(work_dir)
-    if not audio_file:
-        audio_file = os.path.join(work_dir, "a.wav")
-        if not os.path.exists(audio_file):
-            audio_file = os.path.join(work_dir, "audio", "mic.wav")
+    
+    # Enforce clean speech audio
+    audio_file = ensure_clean_audio(work_dir, audio_file)
             
-    if not os.path.exists(audio_file):
+    if not audio_file or not os.path.exists(audio_file):
         print(f"❌ Error: Audio file {audio_file} not found.")
         sys.exit(1)
         
     model = get_whisper_model(model_choice)
     print(f"🎙️ Transcribing with Whisper model [{model}]...", flush=True)
+    print(f"🎧 Transcription audio source: {os.path.basename(audio_file)}", flush=True)
     
     out_json = os.path.join(work_dir, "a.json")
     whisper_log = os.path.join(work_dir, "whisper.log")
@@ -129,5 +174,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Transcribe audio with Whisper")
     parser.add_argument("work_dir", nargs="?", default=".", help="Workspace directory")
     parser.add_argument("--model", default=None, help="Whisper model tier or file path")
+    parser.add_argument("--audio", default=None, help="Explicit audio file to transcribe")
     args = parser.parse_args()
-    transcribe(args.work_dir, model_choice=args.model)
+    transcribe(args.work_dir, audio_file=args.audio, model_choice=args.model)

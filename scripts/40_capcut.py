@@ -367,8 +367,9 @@ SFX_NAMES = ["whoosh_up", "whoosh_down", "pop", "thud", "tap", "click", "shimmer
 
 def cmd_sfx(P):
     import numpy as np, wave
-    src = open(HERE / "05_sfx.py").read()
-    a, b = src.index("def lp("), src.index('for te,d0 in _s.get("riser"')
+    src = open(HERE / "05_sfx.py", encoding="utf-8").read()
+    a = src.index("def lp(")
+    b = src.index("def make_hero_sound(") if "def make_hero_sound(" in src else src.index('for te,d0 in _s.get("riser"')
     g = {"np": np, "SR": 48000, "rng": np.random.RandomState(11)}
     exec(src[a:b].replace("W1=whoosh(0.34,True); W2=whoosh(0.30,False); TH=thud(); TP=tap()", ""), g)
     SR = 48000; out = work_dir(P) / "sfx"; out.mkdir(exist_ok=True)

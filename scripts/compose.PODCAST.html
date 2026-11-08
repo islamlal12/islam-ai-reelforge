@@ -86,17 +86,29 @@ function fillMixed(s,xR,y,fs,wt){ let x=xR; X.textAlign='right'; for(const r of 
 
 /* ── الكابشن ── */
 function chunkAt(t){ return CHUNKS.find(c=>t>=c.s-0.06&&t<c.hold); }
-function drawCaption(t,y){ const c=chunkAt(t); if(!c)return; let FS=CAPSTYLE==='shadow'?86:66;
-  const a=Math.min(1,pr(t,c.s-0.06,c.s+0.10)), pop=1+0.05*(1-eout(pr(t,c.s-0.06,c.s+0.16)));
+function drawCaption(t,y){ const c=chunkAt(t); if(!c)return;
+  // الحجم الذكي (42-50px)
+  let FS = c.fontSize ? Math.min(50, Math.max(42, c.fontSize)) : (c.w.length <= 2 ? 48 : (c.w.length === 3 ? 44 : 42));
+  const a=Math.min(1,pr(t,c.s-0.06,c.s+0.10));
   X.save(); X.globalAlpha=a; X.textBaseline='middle'; X.direction='rtl';
-  const parts=c.w.map(w=>w.t), gap=26; let widths=parts.map(p=>measureMixed(p,FS)), tot=widths.reduce((s,v)=>s+v,0)+gap*(parts.length-1);
-  while(tot>940&&FS>52){ FS-=4; widths=parts.map(p=>measureMixed(p,FS)); tot=widths.reduce((s,v)=>s+v,0)+gap*(parts.length-1); }   /* يصغّر لين يدخل بالكادر */
-  X.translate(W/2,y); X.scale(pop,pop);
-  if(CAPSTYLE==='card'){ const bw=tot+88, bh=FS*1.7; sh(cINK(0.3),44,18); X.fillStyle=cBG(0.96); rr(-bw/2,-bh/2,bw,bh,32); X.fill(); nsh(); }
+  const parts=c.w.map(w=>w.t), gap=14; let widths=parts.map(p=>measureMixed(p,FS)), tot=widths.reduce((s,v)=>s+v,0)+gap*(parts.length-1);
+  while(tot>800&&FS>42){ FS-=2; widths=parts.map(p=>measureMixed(p,FS)); tot=widths.reduce((s,v)=>s+v,0)+gap*(parts.length-1); }
+  
+  // ضبط Y في المنطقة الآمنة (1320-1420 px)
+  const safeY = Math.min(1420, Math.max(1320, y || 1370));
+  X.translate(W/2,safeY);
+  if(CAPSTYLE==='card'){ const bw=tot+40, bh=FS*1.32+16; sh(cINK(0.2),24,10); X.fillStyle=cBG(0.94); rr(-bw/2,-bh/2,bw,bh,14); X.fill(); nsh(); }
   let x=tot/2;
-  for(let i=0;i<parts.length;i++){ const w=c.w[i], on=t>=w.s-0.02&&t<w.e+0.08;   /* الكلمة المنطوقة الحين فقط */
-    if(CAPSTYLE==='shadow'){ sh('rgba(0,0,0,0.95)',26,12); X.fillStyle=on?ACC:'#FFFFFF'; fillMixed(parts[i],x,0,FS); sh('rgba(0,0,0,0.6)',5,4); fillMixed(parts[i],x,0,FS); }
-    else { X.fillStyle=on?ACC:INK; fillMixed(parts[i],x,0,FS); }
+  for(let i=0;i<parts.length;i++){ const w=c.w[i], on=t>=w.s-0.02&&t<w.e+0.08;
+    if(on){
+      // صندوق أنيق 8px للكلمة النشطة بلون التمييز
+      const boxPadX = 8, boxPadY = 4;
+      const bW = widths[i] + boxPadX * 2, bH = FS + boxPadY * 2;
+      X.save(); X.fillStyle = ACC; rr(x - widths[i] - boxPadX, -bH/2, bW, bH, 8); X.fill();
+      X.fillStyle = ONACC || '#FFFFFF'; fillMixed(parts[i], x, 0, FS); X.restore();
+    } else {
+      sh('rgba(0,0,0,0.70)',12,3); X.fillStyle='#FFFFFF'; fillMixed(parts[i],x,0,FS); nsh();
+    }
     x-=widths[i]+gap; }
   nsh(); X.restore(); }
 

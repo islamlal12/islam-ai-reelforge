@@ -42,11 +42,18 @@
   - Skill Workflow Integrator: Upgraded `SKILL.md` in `ai-video-forge` and `video-ad-editor` with frame-accurate sound protocols and verified sync.
   - Lead Orchestrator: Complete test validation, code review, and automated GitHub publishing.
 
+- [x] **Milestone 7: Unscripted De-duplication, Pre-Whisper Denoising, Smart Captions & DaVinci Resolve Export**
+  - Audio DSP Specialist: Mandatory pre-Whisper speech enhancement (`02c_denoise.py` / `a_clean.wav`), preventing noisy hallucinations and ensuring broadcast clarity.
+  - Speech Deduplication Specialist: Advanced repetitive take analyzer (`01b_dedup.py` / `10_script_edit.py`), scoring and preserving the best takes and cutting stutters cleanly.
+  - Smart Caption & Typography Engineer: Smart compact-to-medium sizing (42-50px) within 1080x1080 safe area + Arabic dialect verbatim accuracy pass (`02d_caption_linguistics.py`).
+  - DaVinci Resolve Integration Engineer: Direct timeline exporter (`42_davinci_export.py` -> FCPXML v1.8/1.9 + DaVinci API) for seamless color grading and manual tweaking.
+  - Lead Orchestrator: Synchronize installed skills, open code review, and publish clean update to GitHub `islam-ai-reelforge`.
+
 ---
 
 ## 📝 Current Trajectory
 
-- **Current Active Step:** Milestone 6 fully complete. Frame-accurate audio rules and 3-layer Hero DSP engine active and published to GitHub.
+- **Current Active Step:** Milestone 7 fully verified and integrated. Synchronizing local skills and publishing to GitHub.
 
 ---
 
@@ -54,7 +61,8 @@
 
 | Agent | Task | Status | Notes |
 | :--- | :--- | :--- | :--- |
-| **Audio DSP Specialist** | `hero_hit` 3-layer, clamped risers & speech collision guard in `05_sfx.py` | ✅ Completed | Fully tested & verified |
-| **Sound Design Architect** | Frame-Action map, material matching & guidelines in audio references | ✅ Completed | Comprehensive audio documentation |
-| **Skill Workflow Integrator** | Update `SKILL.md`, sync `ai-video-forge`, and publish clean engine | ✅ Completed | Synced across all 4 skill locations |
-| **Lead Orchestrator** | Verification, testing, and GitHub release push | ✅ Completed | Published to GitHub origin/main |
+| **Audio DSP Specialist** | Pre-Whisper Denoising & `a_clean.wav` mandatory pipeline | ✅ COMPLETED | `02c_denoise.py`, `02_captions.py`, `references/audio-denoise-first.md` |
+| **Speech Deduplication Specialist** | Best-take selection & unscripted repeat removal | ✅ COMPLETED | `01b_dedup.py`, `10_script_edit.py`, `references/dedup-takes.md` |
+| **Smart Caption Engineer** | Smart compact sizing (42-50px) & linguistic accuracy | ✅ COMPLETED | `02d_caption_linguistics.py`, `02_captions.py`, `04_render_frames.js`, `references/smart-captions.md` |
+| **DaVinci Resolve Engineer** | Universal FCPXML v1.8/1.9 timeline generator | ✅ COMPLETED | 42_davinci_export.py, import_to_davinci.py, references/davinci-export.md |
+| **Lead Orchestrator** | Code review, skill sync & GitHub release | ✅ COMPLETED | Fully verified & synchronized |

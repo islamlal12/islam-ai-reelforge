@@ -70,7 +70,7 @@ def main():
         for c in ["src_sdr.mov", "src_fixed.mov", "src.mov", "src.mp4", "ad-master.mp4", "ad-final.mp4"]:   # المصدر أول: النسخة النهائية فيها كابشن محروق
             if os.path.exists(os.path.join(W, c)): video = os.path.join(W, c); break
     video = J(video)
-    th = json.load(open(os.path.join(W, "theme.json"))) if os.path.exists(os.path.join(W, "theme.json")) else {}
+    th = json.load(open(os.path.join(W, "theme.json"), encoding="utf-8")) if os.path.exists(os.path.join(W, "theme.json")) else {}
     bg, ink, acc = th.get("bg", "#111111"), th.get("ink", "#FFFFFF"), th.get("acc", "#F2B33D")
     on = th.get("onAcc", "#FFFFFF"); font = th.get("font", "Tajawal"); handle = th.get("handle", "")
 

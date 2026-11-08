@@ -10,7 +10,7 @@ Automates high-retention video editing directly from code:
 - Adds kinetic Arabic captions with customizable styling (Default: Sleek Slate & Sky Blue, Cairo font)
 - Dynamic camera zooms and face-tracking reframe
 - Broadcast audio mastering to -14.0 LUFS
-- Multi-platform exports: Final MP4 + CapCut Project
+- Multi-platform exports: Final MP4 + CapCut Project + DaVinci Resolve Timeline (FCPXML)
 - First-frame cover injection (0.1s) respecting the 1080x1080 safe zone
 ===================================================================================
 """
@@ -195,6 +195,19 @@ def export_capcut(work):
         except Exception as e:
             print(f"Note: CapCut export skipped: {e}")
 
+def export_davinci(work, auto_import=False):
+    """Generates an editable DaVinci Resolve project and timeline package."""
+    print("🎞️  Exporting universal DaVinci Resolve timeline (FCPXML v1.8/v1.9)...")
+    davinci_script = SCRIPTS_DIR / "42_davinci_export.py"
+    if davinci_script.exists():
+        cmd = [sys.executable, str(davinci_script), str(work)]
+        if auto_import:
+            cmd.append("--import")
+        try:
+            subprocess.run(cmd, check=False)
+        except Exception as e:
+            print(f"Note: DaVinci Resolve export skipped: {e}")
+
 def main():
     banner()
     parser = argparse.ArgumentParser(
@@ -208,6 +221,7 @@ def main():
     parser.add_argument("--denoise-strength", type=float, default=0.85, help="Denoising strength 0.0 to 1.0 (default: 0.85)")
     parser.add_argument("--denoise-model", default="default", help="Optional DeepFilterNet model checkpoint name/path (default: embedded/cache)")
     parser.add_argument("--capcut", action="store_true", help="Also export as an editable CapCut project")
+    parser.add_argument("--davinci", action="store_true", help="Also export as an editable DaVinci Resolve project and timeline")
     parser.add_argument("--cover", help="Generate first-frame cover with headline: 'Line 1|*Colored Line 2*'")
     
     args = parser.parse_args()
@@ -237,12 +251,18 @@ def main():
     if args.capcut:
         export_capcut(work)
         
+    if args.davinci:
+        export_davinci(work)
+        
     final_master = work / "ad-master.mp4"
     print("\n" + "="*70)
     print(f"🎉 Reel creation completed successfully!")
     print(f"📍 Master Video Ready: {final_master}")
     if args.capcut:
         print(f"📍 CapCut Draft Ready: {work / 'draft_content.json'}")
+    if args.davinci:
+        print(f"📍 DaVinci Resolve FCPXML Ready: {work / 'timeline.fcpxml'}")
+        print(f"📍 DaVinci 1-Click Import Script: {work / 'import_to_davinci.py'}")
     print("="*70 + "\n")
 
 if __name__ == "__main__":

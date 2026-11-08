@@ -6,6 +6,7 @@
 |---|---|---|
 | `00_setup.sh` | يفحص الأدوات وينزّل الناقص · `--update` للتحديث | مشترك |
 | `01_cut_plan.py` | يقيس السكتات ويطلع مقاطع الكلام | مشترك |
+| `01b_dedup.py` | محو التكرارات والبدايات المتعثرة واختيار أفضل تيك (`references/dedup-takes.md`) | مشترك |
 | `02_captions.py` | توقيت كل كلمة على التايم-لاين الجديد | مشترك |
 | `02b_enhance_audio.sh` | تحسين الصوت محلياً (`references/audio-enhance.md`) | مشترك |
 | `03_cut_zoom.py` | القص + زوم لكل مقطع + وسم bt709 + محوّل HDR | مشترك |
@@ -19,7 +20,7 @@
 | `07_contact_sheet.sh` | ورقة لقطات وحدة: 3 أعمدة × صفّين (6 بالكثير) | مشترك |
 | `08_safe_check.js` | المنطقة الآمنة + الهوك (نفس حمولة 04: theme + studio + behind) | الخفيف |
 | `09_srt.py` | ملف ترجمة + نص الكابشن | مشترك |
-| `10_script_edit.py` | `show` (يطبع النص والجمل المعادة) · `drop` · `keep` · `undo` | مشترك |
+| `10_script_edit.py` | `show` · `dupes` · `dedup` (فحص وحذف التكرار والتأتأة) · `drop` · `keep` · `undo` | مشترك |
 | `11_behind_text.js` + `personmask.swift` | أنماط القصّ الثلاثة (`references/cut-styles.md`) | الخفيف (ماك) |
 | `12_montage.py` | **وضع المونتاج** (`references/montage.md`) | مستقل |
 | `13_collage.js` · `13_collage_sfx.py` · `collage.TEMPLATE.html` | أسلوب الكولاج (`references/collage.md`) | مستقل |

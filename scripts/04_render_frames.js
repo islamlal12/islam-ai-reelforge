@@ -62,7 +62,7 @@ async function movesInject(p){ if(await p.evaluate(()=>!!(window.FX&&window.MV))
   movesCopy();
   await p.goto(fileURL(W+'compose.html'),{waitUntil:'networkidle0'});
   await movesInject(p);
-  const FF=THEME.font||'Cairo';
+  const FF=THEME.font||'Readex Pro'; const ACC=THEME.acc||'#F97316';
   await p.evaluate(()=>new Promise(r=>{const l=document.getElementById('LOGO');l.complete?r():l.onload=r;}));
   /* 🪝 v3.8.1: الهوك المكتوب (theme.json ← hook) — لو compose.html ما فيه hook-card.js (انسخ من المرجع من جديد / apply قبل وجوده)
      نركّبه هني بدل ما يختفي الهوك بصمت. hook-card.js يمنع التركيب المزدوج وحده. */
@@ -72,7 +72,15 @@ async function movesInject(p){ if(await p.evaluate(()=>!!(window.FX&&window.MV))
     else console.log('⚠️ الهوك بـtheme.json بس ما لقيت hook-card.js — الهوك ما راح ينرسم');
   }
   const STUDIO=fs.existsSync(W+'studio.json')?JSON.parse(fs.readFileSync(W+'studio.json','utf8')):null;   // 📱 تعديلات استوديو الجوال
-  await p.evaluate((c,o,t,b,st)=>window.init({cards:c.cards,total:c.total,outro:o,theme:t,behind:b,studio:st}),caps,OUT_D,THEME,BEHIND,STUDIO);
+  await p.evaluate((c,o,t,b,st)=>{
+    window.init({cards:c.cards,total:c.total,outro:o,theme:t,behind:b,studio:st});
+    // تفعيل الكابشن الذكي المضغوط (42-50px) وضبط المنطقة الآمنة Y=1320-1420 واللون المميز
+    window.SMART_CAPTION_CFG = {
+      minFs: 42, maxFs: 50, font3Words: 44, font12Words: 48, lineHeight: 58,
+      safeAreaY: [1320, 1420], activeBoxRadius: 8, zeroJitter: true,
+      brandAccent: t.acc || '#F97316'
+    };
+  },caps,OUT_D,THEME,BEHIND,STUDIO);
   /* ⚠️ انتظار الخط لازم يجي **بعد** init: الخط اللي مو Cairo يُحقن داخل init نفسها،
      فانتظاره قبلها = انتظار لا شي، والنتيجة أول الفيديو بخط بديل ثم ينقلب بالنص.
      وكل الأوزان تُحمّل — الوزن 600 كان ناقصاً فيطلع بخط بديل لحاله. */
