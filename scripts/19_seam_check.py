@@ -11,7 +11,7 @@ try:
     import mlx_whisper
     tr = lambda seg: mlx_whisper.transcribe(seg, path_or_hf_repo="mlx-community/whisper-large-v3-turbo", language="ar", word_timestamps=True, condition_on_previous_text=False)
 except ImportError:
-    import whisper; _m = whisper.load_model(os.environ.get("WHISPER_MODEL", r"C:\Users\PC\.cache\whisper\large-v3-turbo.pt"))
+    import whisper; _m = whisper.load_model(os.environ.get("WHISPER_MODEL", "turbo"))
     tr = lambda seg: _m.transcribe(seg, language="ar", word_timestamps=True, condition_on_previous_text=False, fp16=False)
 norm = lambda s: re.sub(r"[^ء-ي0-9]", "", s).translate(str.maketrans("أإآىة", "ااايه"))
 CW = [w for c in caps["cards"] for w in c["w"]]; acc, bad = 0, 0

@@ -6,6 +6,7 @@
    node 11_behind_text.js <work> stack 3:1-5     → «طبقات» لكلمات بعينها
    node 11_behind_text.js <work> cutout 23.8-26.6 → «واقف قدام اللوحة»: بلا كرت، أنت العنصر
    node 11_behind_text.js <work> headout 23.8-26.6 → «راسك برّا المستطيل»: الفيديو بكرت وراسك يطلع فوق حافته
+   node 11_behind_text.js <work> person 23.8-26.6 → قصّ بس (بلا تأثير): MV.person لحركات البنك 51–61 (مدار، كسر الإطار، غلاف مجلة…)
    node 11_behind_text.js <work> drop 9          → يشيل جملة وحدة (أو أكثر: drop 1 9) ويخلّي الباقي
    node 11_behind_text.js <work> off             → يلغي التأثير كله (الجُمل + cutout + headout)
 
@@ -22,13 +23,20 @@ const caps=JSON.parse(fs.readFileSync(W+'caps.json','utf8'));
 const FPS=30, MAXW=4, MINDUR=0.85;
 
 const words=c=>c.w.map(w=>w.t).join(' ');
+/* 🆕 6.5 حواف الشعر: بعد قصّ الماك نعيد القصّ ببيريف نت (44_matte.py) — أنعم بوضوح على الشعر وبلا هالة من لون الغرفة
+   (مقارنة ريل البطاريات). يكمّل من وين وقف، وأي فشل (rembg مو منصّب) يخلّي قصّ الماك كما هو. MATTE=apple = الماك بس. */
+function refineMatte(f0,f1){
+  if(String(process.env.MATTE||'').toLowerCase()==='apple') return;
+  const r=cp.spawnSync('python3',[SC+'44_matte.py',W,String(f0),String(f1)],{stdio:'inherit'});
+  if(r.status!==0) console.log('ℹ️ باقي على قصّ الماك للفريمات '+f0+'–'+f1);
+}
 if(MODE==='off'){ try{fs.unlinkSync(W+'behind.json');}catch(e){} console.log('انلغى التأثير.'); process.exit(0); }
 /* ranges (مدى الفريمات اللي يحمّل لها 04 صورة الشخص) تنحسب من الجُمل والمشاهد الموجودة — مو تتراكم مع كل تشغيل */
 function rebuildRanges(o){
   let nv=1e9; try{ nv=fs.readdirSync(W+'vfr').filter(f=>f.endsWith('.jpg')).length||1e9; }catch(e){}
   const fr=(a,b)=>[Math.max(1,Math.floor(a*FPS)+1), Math.min(nv,Math.ceil(b*FPS)+1)], rs=[];
   (o.lines||[]).forEach(l=>rs.push(fr(l.s,l.e)));
-  (o.cutouts||[]).concat(o.headouts||[]).forEach(c=>rs.push(fr(c[0],c[1])));
+  (o.cutouts||[]).concat(o.headouts||[],o.persons||[]).forEach(c=>rs.push(fr(c[0],c[1])));
   rs.sort((p,q)=>p[0]-q[0]); const out=[];
   for(const r of rs){ const z=out[out.length-1]; if(z&&r[0]<=z[1]+1) z[1]=Math.max(z[1],r[1]); else out.push(r.slice()); }
   o.ranges=out; return o; }
@@ -44,7 +52,7 @@ if(MODE==='drop'){
 }
 
 /* ── ماك فقط (مضاف): القصّ يعتمد على Vision عبر swiftc ── */
-if(['build','stack','cutout','headout'].indexOf(MODE)>=0){
+if(['build','stack','cutout','headout','person'].indexOf(MODE)>=0){
   let hasSwift=false;
   if(process.platform==='darwin'){
     try{ hasSwift = cp.spawnSync('swiftc',['--version'],{stdio:'ignore'}).status===0; }catch(e){ hasSwift=false; }
@@ -76,7 +84,7 @@ if(MODE==='plan'){
   process.exit(0);
 }
 
-if(MODE==='cutout'||MODE==='headout'){
+if(MODE==='cutout'||MODE==='headout'||MODE==='person'){
   /* «واقف قدام اللوحة»: نقصّ المتحدث بمدى زمني كامل، ونرسمه فوق التصميم بلا كرت */
   const m=String(process.argv[4]||'').match(/^([\d.]+)-([\d.]+)$/);
   if(!m){ console.log('عطني مدى بالثواني: cutout 23.8-26.6'); process.exit(2); }
@@ -98,32 +106,40 @@ if(MODE==='cutout'||MODE==='headout'){
   cp.execSync(JSON.stringify(BIN2)+' '+JSON.stringify(W+'bt/src')+' '+JSON.stringify(W+'bt/mask')+' accurate 2.5',{stdio:'inherit'});
   cp.execSync('ffmpeg -v error -start_number '+f0+' -i '+JSON.stringify(W+'bt/src/%05d.jpg')+
     ' -start_number '+f0+' -i '+JSON.stringify(W+'bt/mask/%05d.png')+' -frames:v '+(f1-f0+1)+
-    ' -filter_complex "[1:v]format=gray,scale=1080:1920[a];[0:v][a]alphamerge,format=rgba"'+
+    ' -filter_complex "[1:v]format=gray,scale=1080:1920[a];[0:v]scale=in_color_matrix=bt601:in_range=pc:flags=accurate_rnd+full_chroma_int+full_chroma_inp+bicubic,format=gbrp[c];[c][a]alphamerge,format=rgba"'+
     ' -start_number '+f0+' -y '+JSON.stringify(W+'bt/person/%05d.png'),{stdio:'pipe'});
+  refineMatte(f0,f1);
   const prev=fs.existsSync(W+'behind.json')?JSON.parse(fs.readFileSync(W+'behind.json','utf8')):{lines:[],ranges:[],faces:{}};
-  const key=MODE==='headout'?'headouts':'cutouts';
+  const key=MODE==='headout'?'headouts':MODE==='person'?'persons':'cutouts';
   prev[key]=(prev[key]||[]).filter(c=>!(c[0]===a&&c[1]===b)).concat([[a,b]]);   /* نفس المدى مرتين = مرة وحدة */
   rebuildRanges(prev);
   const meta=JSON.parse(fs.readFileSync(W+'bt/mask/meta.json','utf8'));
   prev.faces=prev.faces||{};
   for(const mm of meta) if(mm.face) prev.faces[parseInt(mm.f,10)]=mm.face;
   /* 8 سبتمبر: حدود ثابتة للمشهد كله (وسيط حدود الجسم عبر فريماته) — بدونها الكرت الصغير كان يتبع الجسم بكل فريم
-     فتهتز الخلفية (بلاغ المستخدم). المحرّك يقرأ headbox[بداية المدى] ويثبّت التأطير، والحركة الوحيدة حركة المتحدث نفسه */
+     فتهتز الخلفية (بلاغ المستخدم). المحرّك يقرأ headbox[بداية المدى] ويثبّت التأطير، والحركة الوحيدة حركة المتحدث نفسه.
+     20 أكتوبر: كانت تنحسب بـ`python3 -c` عبر الشِل — JSON.stringify يحوّل أسطر الكود لـ«\n» حرفية والشِل ما يفكها
+     ← SyntaxError، والرسالة تقول «يحتاج PIL» غلط، فما انكتب headbox أبداً. الحين بـffmpeg (اشتغل فوق) + نود: بلا بايثون ولا PIL */
   if(MODE==='headout'){
     try{
-      const py='import json,os,statistics\nfrom PIL import Image\nW='+JSON.stringify(W)+';f0='+f0+';f1='+f1+'\nxs0=[];xs1=[];ys0=[];ys1=[]\n'+
-        'for n in range(f0,f1+1,3):\n p=W+"bt/mask/%05d.png"%n\n if not os.path.exists(p): continue\n bb=Image.open(p).convert("L").point(lambda v:255 if v>140 else 0).getbbox()\n if not bb: continue\n xs0.append(bb[0]);ys0.append(bb[1]);xs1.append(bb[2]);ys1.append(bb[3])\n'+
-        'print(json.dumps({"x0":statistics.median(xs0),"x1":statistics.median(xs1),"y0":statistics.median(ys0),"y1":statistics.median(ys1),"n":len(xs0)}) if xs0 else "null")';
-      const hb=JSON.parse(cp.execSync('python3 -c '+JSON.stringify(py),{stdio:'pipe'}).toString().trim());
-      if(hb){ prev.headbox=prev.headbox||{}; prev.headbox[String(a)]=hb; }
-    }catch(e){ console.log('⚠️ ما قدرت أحسب الحدود الثابتة (يحتاج PIL) — الكرت بيتبع الجسم بكل فريم'); }
+      const xs0=[],xs1=[],ys0=[],ys1=[];
+      for(let f=f0;f<=f1;f+=3){ const p=W+'bt/mask/'+String(f).padStart(5,'0')+'.png'; if(!fs.existsSync(p)) continue;
+        const g=cp.execFileSync('ffmpeg',['-v','error','-i',p,'-vf','scale=1080:1920,format=gray','-f','rawvideo','-'],{maxBuffer:1<<23});
+        let x0=1e9,x1=-1,y0=-1,y1=-1;   /* نفس getbbox بعد عتبة 140: x1/y1 = آخر بكسل + 1 */
+        for(let y=0;y<1920;y++){ const r=y*1080; for(let x=0;x<1080;x++) if(g[r+x]>140){ if(x<x0)x0=x; if(x>x1)x1=x; if(y0<0)y0=y; y1=y; } }
+        if(x1<0) continue; xs0.push(x0); ys0.push(y0); xs1.push(x1+1); ys1.push(y1+1); }
+      const med=v=>{ v=v.slice().sort((p,q)=>p-q); const m=v.length>>1; return v.length%2?v[m]:(v[m-1]+v[m])/2; };
+      if(!xs0.length) throw new Error('القناع فاضي بكل الفريمات');
+      prev.headbox=prev.headbox||{}; prev.headbox[String(a)]={x0:med(xs0),x1:med(xs1),y0:med(ys0),y1:med(ys1),n:xs0.length};
+      console.log('📐 headbox:',JSON.stringify(prev.headbox[String(a)]));
+    }catch(e){ console.log('⚠️ ما قدرت أحسب الحدود الثابتة ('+String(e.message||e).split('\n')[0]+') — الكرت بيتبع الجسم بكل فريم'); }
   }
   fs.writeFileSync(W+'behind.json',JSON.stringify(prev,null,1));
-  console.log('✅ '+(MODE==='headout'?'«راسك برّا المستطيل»':'«واقف قدام اللوحة»')+' جاهز من',a,'إلى',b,'ثانية.');
+  console.log('✅ '+(MODE==='headout'?'«راسك برّا المستطيل»':MODE==='person'?'قصّ المتحدث (MV.person)':'«واقف قدام اللوحة»')+' جاهز من',a,'إلى',b,'ثانية.');
   console.log('   ارسم: node 04_render_frames.js '+W+' range '+a+' '+b);
   process.exit(0);
 }
-if(MODE!=='build'&&MODE!=='stack'){ console.log('الأوامر: plan · build · stack · cutout · headout · drop · off'); process.exit(2); }
+if(MODE!=='build'&&MODE!=='stack'){ console.log('الأوامر: plan · build · stack · cutout · headout · person · drop · off'); process.exit(2); }
 /* «2» = الجملة كاملة · «2:6-8» = الكلمات 6→8 داخل الجملة 2 */
 const pick=process.argv.slice(4).map(a=>{
   const m=String(a).match(/^(\d+)(?::(\d+)-(\d+))?$/); if(!m) return null;
@@ -170,8 +186,9 @@ for(const [f0,f1] of ranges){
   cp.execSync('ffmpeg -v error -start_number '+f0+' -i '+JSON.stringify(W+'bt/src/%05d.jpg')+
     ' -start_number '+f0+' -i '+JSON.stringify(W+'bt/mask/%05d.png')+
     ' -frames:v '+(f1-f0+1)+
-    ' -filter_complex "[1:v]format=gray,scale=1080:1920[a];[0:v][a]alphamerge,format=rgba"'+
+    ' -filter_complex "[1:v]format=gray,scale=1080:1920[a];[0:v]scale=in_color_matrix=bt601:in_range=pc:flags=accurate_rnd+full_chroma_int+full_chroma_inp+bicubic,format=gbrp[c];[c][a]alphamerge,format=rgba"'+
     ' -start_number '+f0+' -y '+JSON.stringify(W+'bt/person/%05d.png'),{stdio:'pipe'});
+  refineMatte(f0,f1);
 }
 
 /* 5) «طبقات»: قناع الجمع لكل جملة = متوسط أقنعة فريماتها (ربع الدقة). المحرّك يقرأ منه حدود الجسم صف صف

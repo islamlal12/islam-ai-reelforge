@@ -6,21 +6,21 @@
 |---|---|---|
 | `00_setup.sh` | يفحص الأدوات وينزّل الناقص · `--update` للتحديث | مشترك |
 | `01_cut_plan.py` | يقيس السكتات ويطلع مقاطع الكلام | مشترك |
-| `01b_dedup.py` | محو التكرارات والبدايات المتعثرة واختيار أفضل تيك (`references/dedup-takes.md`) | مشترك |
+| `02a_whisper_check.py` | 6.1: يفحص تفريغ وِسبر (تكرار مهلوس + كلام طاح) قبل التصحيح · `--fix` يعيد تفريغ النوافذ بقطع بلا سياق | مشترك |
 | `02_captions.py` | توقيت كل كلمة على التايم-لاين الجديد | مشترك |
 | `02b_enhance_audio.sh` | تحسين الصوت محلياً (`references/audio-enhance.md`) | مشترك |
-| `03_cut_zoom.py` | القص + زوم لكل مقطع + وسم bt709 + محوّل HDR | مشترك |
+| `03_cut_zoom.py` | القص + زوم لكل مقطع + وسم bt709 + محوّل HDR + فريمات `vfr/` بألوان مطابقة (`--frames` = الفريمات بس) | مشترك |
 | `_landscape.py` | يستدعيه 03 لحاله للفيديو العرضي: حدود اللقطات + الوجه → قصّ 9:16 لكل لقطة · `shots.json` (`references/landscape.md`) | مشترك (الوجه ماك) |
 | `04_render_frames.js` | يرسم الفريمات (استئناف + نافذة + معاينة) · يطبع أخطاء المشاهد بـ`[compose]` · بصمة التصميم: تغيّر أو `--force` = يمسح القديم أول | الخفيف |
 | `04b_remotion.sh` | يجهّز/يفتح/يرندر مشروع ريموشن (`references/remotion.md`) | ريموشن |
 | `05_sfx.py` | المؤثرات الصوتية من `sfx.json` | مشترك |
-| `06_encode.sh` | يجمّع الفريمات + الصوت | الخفيف |
+| `06_encode.sh` | يجمّع الفريمات + الصوت · `FIT=1` بمرحلتين تحت `MAXMB` ميقا (6.1 — ريل بلا كفر) | الخفيف |
 | `06b_master.sh` | ‎-14 LUFS + ملف صوتي بالخلفية بخفض تلقائي | مشترك |
 | `06c_loudfix.sh` | لما 06b يوقف تحت الهدف (‎-15/-16 بسبب قمم عالية): ضغط خفيف + ‎-14 بمرحلتين، الصورة كما هي | مشترك |
 | `07_contact_sheet.sh` | ورقة لقطات وحدة: 3 أعمدة × صفّين (6 بالكثير) | مشترك |
 | `08_safe_check.js` | المنطقة الآمنة + الهوك (نفس حمولة 04: theme + studio + behind) | الخفيف |
 | `09_srt.py` | ملف ترجمة + نص الكابشن | مشترك |
-| `10_script_edit.py` | `show` · `dupes` · `dedup` (فحص وحذف التكرار والتأتأة) · `drop` · `keep` · `undo` | مشترك |
+| `10_script_edit.py` | `show` (يطبع النص والجمل المعادة) · `drop` · `keep` · `undo` | مشترك |
 | `11_behind_text.js` + `personmask.swift` | أنماط القصّ الثلاثة (`references/cut-styles.md`) | الخفيف (ماك) |
 | `12_montage.py` | **وضع المونتاج** (`references/montage.md`) | مستقل |
 | `13_collage.js` · `13_collage_sfx.py` · `collage.TEMPLATE.html` | أسلوب الكولاج (`references/collage.md`) | مستقل |
@@ -40,12 +40,18 @@
 | `33_thumb.py` | ثمبنيل يوتيوب 16:9 بثلاث أفكار (وجه كبير + هوك ≥120 بكسل + تحت يمين فاضي) → 3840×2160 و1280×720 + `thumbs_sheet.jpg` | الكفر |
 | `34_phone_preview.py` | معاينة الكفر/الثمبنيل بحجمه الحقيقي بالجوال (تبويب الريلز · البروفايل · من بعيد · يوتيوب) | الكفر |
 | `40_capcut.py` | مونتاج داخل كاب كت: خطة من التفريغ ← موشن ProRes شفاف + مؤثرات ← يكتب مشروع كاب كت قابل للتعديل (`projects` · `skeleton` · `check` · `stills` · `render` · `sfx` · `write` · `all`) | كاب كت |
-| `41_review.py` + `review.TEMPLATE.html` | صفحة مراجعة الحلقة: كل الريلات والكاروسيل بصفحة وحدة (ملاحظة · اعتمد · تحميل) تنتشر خاصة على claude.ai — `references/review-page.md` | بودكاست |
+| `41_review.py` + `review.TEMPLATE.html` | صفحة مراجعة الحلقة: كل الريلات والكاروسيل بصفحة وحدة (ملاحظة · اعتمد · تحميل) تنتشر خاصة على claude.ai — `references/review-page.md` · 🆕 6.5 الملاحظة بوقتها على الفريم · `taste show/add/drop` = ملف الذوق | بودكاست |
 | `29_handtrack.py` + `handpose.swift` | تتبّع الكف (Vision) → `palm.js` منعّم: عنصر يمشي مع الإيد | مشترك (ماك) |
+| `36_facetrack.py` + `facetrack.swift` | تتبّع الوجه (Vision) → `face.js` منعّم: `MV.faceAt(t)` لحركات المعرض 85 و86 (`references/moves.md` 3د) | مشترك (ماك) |
+| `37_env.py` | علو صوته لكل فريم ← `env.js` (`window.ENV`): `MV.env(t)` لموجة/نبض يتحرك مع كلامه الحقيقي (`references/moves.md` 3و) | مشترك |
 | `22b_hook_center.py` | مركز زوم الهوك = وجهه → `theme.hookCenter` | الخفيف (ماك) |
 | `30_demo.js` | ديمو سينمائي: تسجيل شاشة/لقطات موقع داخل إطار جوال/متصفح + زوم على نقطة + ميلان 3D + علامة ضغط + عنوان | مشترك |
 | `31_device3d.js` + `motion/device3d.html` | آيفون/ماك بوك ثلاثي الأبعاد حقيقي (three.js، معدن وزجاج وظل) بنفس `demo.json` | مشترك |
-| `32_midframes.py` | فحص قبل التصدير: لقطة من نص كل مشهد → أوراق `mid_N.jpg` | الخفيف |
+| `43_textbox.py` | 🆕 6.5 مربع بالضبط على المعلومة: يقرأ الكتابة على المنتج بكل فريم (Vision) ويلحقها ← `tb.js` (`TB.at`) + `tb_<اسم>.jpg` | الخفيف (ماك) |
+| `44_matte.py` | 🆕 6.5 قصّ الشخص ببيريف نت (حواف شعر ناعمة) + تنظيف لون الغرفة من الأطراف + لون الغرفة ← `depth.json` (يناديه `11_behind_text.js` — `MATTE=apple` للماك) | مشترك |
+| `depth.js` | 🆕 6.5 العمق: الغرفة ← كلام ورا ← الشخص ← كلام قدام + كاميرا بين الطبقات + كلمة مضيئة تنوّر + لون الغرفة + `DEPTH.box` — `references/depth.md` | الخفيف |
+| `sfx/bank.npz` | 🆕 6.5 بنك 46 مؤثر CC0 (tick hit impact air swish paper pop ding clink) — `05_sfx.py` + `MV.cue` + `04_render_frames.js cues` — `references/depth.md` §7 | مشترك |
+| `32_midframes.py` | فحص قبل التصدير: لقطة من نص كل مشهد → أوراق `mid_N.jpg` · 🆕 6.5 `--story`: ستوري بورد لقطة لكل سطر قبل الرسم الكامل | الخفيف |
 | `25_scopes.py` | فحص الإضاءة والألوان → `scopes.json` + تصحيح مقاس (`grade:"auto"` بموافقته) | مشترك |
 | `26_find_shots.py` | البحث بالمعنى داخل المقاطع (SigLIP2) — `references/find-shots.md` | مشترك |
 | `compose.REFERENCE.html` | المحرّك: الفيديو · الكابشن · ورا الراس · بي-رول · مولّد · ملصقات · كرت النهاية | الخفيف |
@@ -58,3 +64,8 @@
 ## ملفات مجلد الشغل
 `src.mov` · `spec.json` (حلقة ← ريل) · `a.json` (وِسبر) · `fixes.json` · `cut.json` · `caps.json` · `theme.json` · `studio.json` · `sfx.json` · `behind.json` · `safe.json` (اختياري) · `hook-card.js` + `hook_sheet.jpg` (الهوك) · `vfr/` (فريمات المصدر) · `out/` (فريمات الرسم) · `prev/` (معاينة) · `ad-final.mp4` · `ad-master.mp4/.srt/.txt`.
 **احفظ `caps.json` و`cut.json`** — أي تعديل لاحق ما يحتاج إعادة تفريغ.
+
+## ريل مراجعة المنتج
+- `scripts/review/review.py`: فحص المواد، الصوت، التتبع، فريمات التجربة، الرسم، التسليم، والكفر.
+- `scripts/review/overlay.html` + `render_overlay.js`: طبقة الموشن من `plan.json`.
+- `scripts/review/stage.py` + `cover.html` + `cover_render.js`: كفر المنتج المقصوص.

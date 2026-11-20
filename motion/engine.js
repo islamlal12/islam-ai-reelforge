@@ -1,3 +1,12 @@
+/* خط الرقعة (Aref Ruqaa) يرسم التاء المربوطة المنفصلة بلا نقطتين («الخطوة» تنقرا «الخطوه»).
+   الحل: حرف ربط خفي (ZWJ) قبل «ة» اللي بعد حرف ما يتصل بعده — تطلع بشكلها الأخير بنقطتيها. ينطبق على أي رسم بهالخط. */
+(function () {
+  const P = (typeof CanvasRenderingContext2D !== 'undefined') && CanvasRenderingContext2D.prototype;
+  if (!P || P.__ruqaaFix) return; P.__ruqaaFix = true;
+  const fix = (s) => String(s).replace(/(?<=^|[\s\u0640اأإآٱدذرزوؤءة]|[اأإآٱدذرزوؤءة][\u064B-\u065F]+)ة/gu, '\u200Dة');
+  const wrap = (name) => { const f = P[name]; P[name] = function (s, ...a) { return f.call(this, /Aref Ruqaa/.test(this.font) ? fix(s) : s, ...a); }; };
+  ['fillText', 'strokeText', 'measureText'].forEach(wrap);
+})();
 /* ═══ engine.js — محرّك «شرح بالموشن» (2D + 3D، حتمي بالزمن) ═══
    العقد والـAPI الكامل: ENGINE-API.md
    قاعدة ذهبية: الفريم t يعتمد على t فقط — لا rAF ولا Date ولا Math.random بأي مشهد. */
@@ -19,6 +28,7 @@ const Q = new URLSearchParams(location.search);
 const RENDER_MODE = Q.get('render') === '1';
 const SCALE = parseFloat(Q.get('scale') || '1');
 const SAFE = Q.get('safe') === '1';
+const NOBLUR = Q.get('blur') === '0';                  // --no-blur بالمعاينة السريعة
 const PROJ = (Q.get('proj') || '/proj/').replace(/\/?$/, '/');
 
 /* ─────────────────────────── math · easing ─────────────────────────── */
@@ -110,6 +120,10 @@ const M = G.MOTION = G.MOTION || {};
 M.ready = false; M.error = null; M.version = '1.0';
 const defs = [];                                       // registered scene defs
 M.scene = def => { if (!def || !def.id) throw new Error('MOTION.scene needs {id}'); defs.push(def); return def; };
+/* MOTION.stage — طبقة ثابتة للفيلم كله (إطار، عنوان، عدّاد) + نافذة المحتوى. المشاهد والانتقالات تنرسم داخل النافذة بس،
+   فالفيلم يبين لقطة وحدة: الإطار والعنوان ما يتحركون، واللي داخل النافذة يتبدل. ENGINE-API.md §2ب */
+let stageDef = null;
+M.stage = def => { stageDef = def || null; return def; };
 const S = { proj: null, tl: null, W: 1080, H: 1920, fps: 60, dur: 3, scenes: [], beats: [], bars: [], vo: {}, voList: [], fontsReady: false };
 
 /* ─────────────────────────── fonts ─────────────────────────── */
@@ -126,6 +140,7 @@ const FONT_FILES = [
   ['Tajawal', 'Tajawal-Bold.ttf', '700'],
   ['Tajawal', 'Tajawal-Black.ttf', '900'],
   ['Inter', 'Inter-VF.ttf', '100 900'],
+  ['Amiri Quran', 'AmiriQuran-Regular.ttf', '400'],     // عثماني للقرآن بس (FX.ayahCalm 74) — SIL OFL 1.1
 ];
 async function loadFonts(extra = []) {
   const list = FONT_FILES.map(([fam, file, weight]) => ({ fam, url: './fonts/' + file, weight })).concat(extra);
@@ -240,6 +255,71 @@ function stage3D(opts = {}) {
   return st;
 }
 
+/* slideWall — افتتاحية «جدار شرائح» 3D: شبكة كروت بسماكة تطلع من العمق، الكاميرا تطير عليها مايلة،
+   وبالأخير كرت البطل يجي قدام ويملا نافذة المحتوى بالضبط (قطع مطابق مع المشهد اللي بعده).
+   o: {cols, rows, hero, card:(X,w,h,i,isHero)=>{} يرسم وجه الكرت 2D, win:{x,y,w,h,r} (افتراضي نافذة الستيج),
+       cardH (وحدة عالم، 2), gap, depth, texW, fov, slab:'#hex', edge:'#hex',
+       times:{pop:[a,b], fly:[a,b], land:[a,b]} بالثواني المحلية, from:{cam,look,roll}, via:{cam,look,roll}}
+   ‏draw(X, lt) يحرّك كل شي من lt بس (حتمي). عند lt ≥ land[1] الكرت = النافذة بكسل بكسل (tone:'none'). */
+function slideWall(o = {}) {
+  const win = o.win || stageWin(S.stage ? (S.stage.introEnd ?? 1e9) : 0) || { x: 0, y: 0, w: S.W, h: S.H, r: 0 };
+  const cols = o.cols || 5, rows = o.rows || 4, n = cols * rows, hero = o.hero ?? (Math.floor(rows / 2) * cols + Math.floor(cols / 2));
+  const ch = o.cardH || 2, cw = ch * win.w / win.h, gap = o.gap ?? .26, depth = o.depth ?? .07, rW = (win.r || 0) * ch / win.h;
+  const texW = o.texW || 720, texH = Math.round(texW * win.h / win.w);
+  const st = stage3D({ fov: o.fov || 30, camera: [0, 0, 12], tone: 'none', env: 'room', samples: 4 });
+  st.scene.add(new THREE.HemisphereLight(0xffffff, 0x202020, .6));
+  const slabGeo = new RoundedBoxGeometry(cw, ch, depth, 4, Math.min(rW, depth / 2 - .001));
+  const faceGeo = (() => { const sh = new THREE.Shape(), r = rW, w = cw / 2, h = ch / 2;
+    sh.moveTo(-w + r, -h); sh.lineTo(w - r, -h); sh.quadraticCurveTo(w, -h, w, -h + r); sh.lineTo(w, h - r); sh.quadraticCurveTo(w, h, w - r, h);
+    sh.lineTo(-w + r, h); sh.quadraticCurveTo(-w, h, -w, h - r); sh.lineTo(-w, -h + r); sh.quadraticCurveTo(-w, -h, -w + r, -h);
+    const g = new THREE.ShapeGeometry(sh, 12), uv = g.attributes.uv, p = g.attributes.position;
+    for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / cw + .5, p.getY(i) / ch + .5);
+    return g; })();
+  const cards = [];
+  for (let i = 0; i < n; i++) {
+    const c = makeCanvas(texW, texH), X = c.getContext('2d'); resetCtxState(X);
+    X.save(); if (o.card) o.card(X, texW, texH, i, i === hero); X.restore();
+    const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+    const g = new THREE.Group();
+    const slab = new THREE.Mesh(slabGeo, new THREE.MeshStandardMaterial({ color: o.slab || '#141414', roughness: .45, metalness: .3, envMapIntensity: .5, transparent: true }));
+    const face = new THREE.Mesh(faceGeo, new THREE.MeshBasicMaterial({ map: tex, transparent: true, toneMapped: false }));
+    face.position.z = depth / 2 + .002; g.add(slab, face);
+    const cx = i % cols, cy = Math.floor(i / cols);
+    g.userData = { x: (cx - (cols - 1) / 2) * (cw + gap), y: ((rows - 1) / 2 - cy) * (ch + gap), slab, face };
+    st.add(g); cards.push(g);
+  }
+  const H = cards[hero].userData;
+  // وضعية الهبوط: كاميرا مستقيمة على وجه البطل، بُعدها يخلي ارتفاع الكرت = ارتفاع النافذة، ومزاحة لين مركزه = مركز النافذة
+  const tanH = Math.tan((o.fov || 30) * Math.PI / 360), zFace = depth / 2 + .002, d = ch * S.H / (win.h * 2 * tanH), wpp = 2 * d * tanH / S.H;
+  const land = { cam: [H.x + (S.W / 2 - (win.x + win.w / 2)) * wpp, H.y - (S.H / 2 - (win.y + win.h / 2)) * wpp, zFace + d], roll: 0 };
+  land.look = [land.cam[0], land.cam[1], zFace];
+  const T = Object.assign({ pop: [0, 1.1], fly: [0, 2.2], land: [2.2, 3.2] }, o.times || {});
+  const from = Object.assign({ cam: [H.x - 5.5, H.y + 2.6, 7.5], look: [H.x + 1.2, H.y - .4, 0], roll: -.16 }, o.from || {});
+  const via = Object.assign({ cam: [H.x + 3.2, H.y - 1.4, 6.4], look: [H.x - .6, H.y + .3, 0], roll: .07 }, o.via || {});
+  const L3 = (a, b, k) => [lerp(a[0], b[0], k), lerp(a[1], b[1], k), lerp(a[2], b[2], k)];
+  const wall = {
+    st, cards, hero, land, times: T,
+    draw(X = CUR.X, lt = 0) {
+      const kf_ = E.sineInOut(prog(lt, T.fly[0], T.fly[1])), kl = E.expoInOut(prog(lt, T.land[0], T.land[1]));
+      let cam = L3(from.cam, via.cam, kf_), look = L3(from.look, via.look, kf_), roll = lerp(from.roll, via.roll, kf_);
+      cam = L3(cam, land.cam, kl); look = L3(look, land.look, kl); roll = lerp(roll, 0, kl);
+      st.camera.position.set(cam[0], cam[1], cam[2]); st.camera.up.set(Math.sin(roll), Math.cos(roll), 0); st.camera.lookAt(look[0], look[1], look[2]);
+      cards.forEach((g, i) => {
+        const u = g.userData, dist = Math.hypot(u.x - H.x, u.y - H.y);
+        const kp = E.springK(prog(lt, T.pop[0] + dist * .07, T.pop[0] + dist * .07 + (T.pop[1] - T.pop[0]) * .7));
+        const away = i === hero ? 0 : kl;
+        g.position.set(u.x, u.y, (1 - kp) * -6 - away * 5);
+        g.rotation.set((1 - kp) * .5, (1 - kp) * -1.1 * (u.x < H.x ? 1 : -1), 0);
+        g.scale.setScalar(Math.max(.001, kp));
+        const op = i === hero ? 1 : 1 - E.cubicIn(away);
+        u.slab.material.opacity = op; u.face.material.opacity = op; g.visible = op > .003 && kp > .001;
+      });
+      st.draw(X);
+    },
+  };
+  return wall;
+}
+
 /* ─────────────────────────── Arabic text ─────────────────────────── */
 const AR_INDIC = '٠١٢٣٤٥٦٧٨٩', FA_INDIC = '۰۱۲۳۴۵۶۷۸۹';
 const westernDigits = s => String(s).replace(/[٠-٩]/g, d => AR_INDIC.indexOf(d)).replace(/[۰-۹]/g, d => FA_INDIC.indexOf(d));
@@ -337,10 +417,17 @@ function drawLayout(X, L, x, y, o = {}) {
       if (st.clip || st.reveal != null || st.clipUp != null) {         // masks
         X.beginPath();
         if (st.reveal != null) { const rw = (box.w + 20) * clamp(st.reveal); X.rect(box.x + box.w + 10 - rw, box.y - L.size * .3, rw, box.h + L.size * .6); }   // RTL wipe
-        else if (st.clipUp != null) X.rect(box.x - 20, box.y - L.size * .3, box.w + 40, box.h + L.size * .3);                                           // rise from below baseline
+        else if (st.clipUp != null) {   /* 🛠️ 6.5 (بلاغ ماجد): القناع من قياس الكلمة الحقيقي (فوق وتحت الحروف + هامش) — داخلة = تطلع من خط مخفي تحتها،
+             طالعة = تختفي بخط مخفي فوقها، واقفة = بلا قناع (النقاط والذيول ج ي ع كاملة). clipUp:'in'|'out' — أو رقم (قديم): الاتجاه من dy */
+          const ph = (st.clipUp === 'in' || st.clipUp === 'out') ? st.clipUp : ((st.dy || 0) > 0.5 ? 'in' : (st.dy || 0) < -0.5 ? 'out' : null);
+          if (ph) { const mm = X.measureText(w.text), pad = L.size * 0.14, asc = (mm.actualBoundingBoxAscent || L.size * 0.95) + pad, des = (mm.actualBoundingBoxDescent || L.size * 0.4) + pad, hx = L.size * 0.5;
+            if (ph === 'in') X.rect(box.x - hx, box.base - asc - L.size * 3, box.w + hx * 2, asc + des + L.size * 3);
+            else X.rect(box.x - hx, box.base - asc, box.w + hx * 2, asc + des + L.size * 3); }
+          else X.rect(-1e4, -1e4, 2e4, 2e4); }
         else X.rect(st.clip.x, st.clip.y, st.clip.w, st.clip.h);
         X.clip();
       }
+      if (st.blur > 0.3) X.filter = 'blur(' + (+st.blur).toFixed(1) + 'px)';
       X.translate(box.cx + (st.dx || 0), box.cy + (st.dy || 0)); if (st.rot) X.rotate(st.rot); if (st.scale != null) X.scale(st.scale, st.scaleY ?? st.scale);
       X.translate(-box.cx, -box.cy);
       if (st.shadow) { X.shadowColor = st.shadow.color || 'rgba(0,0,0,.3)'; X.shadowBlur = st.shadow.blur || 20; X.shadowOffsetY = st.shadow.y || 8; }
@@ -385,6 +472,28 @@ function fit(X, str, o = {}) {
 }
 /* typewriter substring that keeps the joining form of the last letter (ZWJ) */
 function typeSub(str, k) { const ch = [...westernDigits(str)], n = Math.round(clamp(k) * ch.length); const s = ch.slice(0, n).join(''); return n < ch.length && n > 0 && DUAL.has(ch[n - 1]) ? s + '‍' : s; }
+/* slot(X, t, [[t0,'نص'],[t1,'نص ثاني'],…], {x,y,size,family,weight,color,align,dur,stagger,maxWidth,instant})
+   خانة نص ثابتة المكان: عند كل مفتاح النص القديم يطلع لفوق ويختفي والجديد يطلع من تحت، كلمة كلمة، داخل شريط مقصوص.
+   instant: true = أول نص يبين بلا دخول. يرجّع {i, text, k} (k = تقدّم دخول النص الحالي). */
+function slot(X, t, keys, o = {}) {
+  let i = -1; for (let n = 0; n < keys.length; n++) if (t >= keys[n][0]) i = n;
+  const dur = o.dur ?? .5, st = o.stagger ?? .06, size = o.size || 80;
+  const one = (str, t0, t1, first) => {
+    const L = layout(X, str, o), n = L.words.length;
+    let kin = 1;
+    drawLayout(X, L, o.x ?? 540, o.y ?? 300, { align: o.align || 'center', color: o.color, perWord: (wi, w, box) => {
+      const a = (first && o.instant) ? 1 : E.expoOut(prog(t, t0 + wi * st, t0 + wi * st + dur));
+      const b = t1 == null ? 0 : E.expoIn(prog(t, t1 - dur * .7 + wi * st * .5, t1 + wi * st * .5));
+      if (wi === 0) kin = a;
+      if (a <= 0 || b >= 1) return { skip: true };
+      return { dy: (1 - a) * size * 1.7 - b * size * 1.7, clip: { x: box.x - 30, y: box.base - size * 1.15, w: box.w + 60, h: size * 1.7 }, color: o.colorOf ? o.colorOf(wi, w) : undefined };
+    } });
+    return kin;
+  };
+  let k = 0;
+  if (i >= 0) k = one(keys[i][1], keys[i][0], keys[i + 1] ? keys[i + 1][0] : null, i === 0);
+  return { i, text: i >= 0 ? keys[i][1] : '', k };
+}
 /* text → offscreen canvas (for 3D textures / caching). returns {canvas, w, h} */
 function textCanvas(str, o = {}) {
   const size = o.size || 200, pad = o.pad ?? Math.round(size * 0.35);
@@ -613,11 +722,13 @@ function makeCtx(sc) {
     // vo
     wordTime, lineSpan, wordsOf, activeWord, vo: S.vo,
     // text
-    font: fontStr, F: fontStr, text: Object.assign((X, s, x, y, o) => text(X, s, x, y, o), { draw: text, layout, drawLayout, kashida, drawKashida, fit, typeSub, canvas: textCanvas, westernDigits, visualOrder }),
+    font: fontStr, F: fontStr, text: Object.assign((X, s, x, y, o) => text(X, s, x, y, o), { draw: text, layout, drawLayout, kashida, drawKashida, fit, typeSub, canvas: textCanvas, westernDigits, visualOrder, slot }), slot,
     num: (v, d = 0) => westernDigits(Number(v).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })),
     textTexture, textPlane, extrudedText,
     // 3D
-    stage3D, renderer: () => getRenderer().renderer,
+    stage3D, renderer: () => getRenderer().renderer, slideWall,
+    // stage — نافذة المحتوى الحالية {x,y,w,h,r} (الإطار كامل لو ما فيه ستيج)
+    win: (t = 0) => stageWin(t) || { x: 0, y: 0, w: S.W, h: S.H, r: 0 },
     // fx
     particles3D, particles2D, drawPath, pathInfo,
     // images
@@ -626,6 +737,8 @@ function makeCtx(sc) {
     get MK() { return G.MK; },
     // moves.js — مكتبة حركات المعرض المرقّم: ctx.FX.<اسم>(ctx, t, o) (references/moves.md)
     get FX() { return G.FX; },
+    // styles.js — ctx.S = ستايل المشروع (null لو ما فيه) · ctx.STYLES للدمج/التبديل داخل مشهد
+    get S() { return S.ST; }, get STYLES() { return G.STYLES; },
   };
   return ctx;
 }
@@ -641,6 +754,13 @@ async function boot() {
     S.W = proj.width || 1080; S.H = proj.height || 1920; S.fps = proj.fps || 60;
     S.P = Object.assign({ bg: '#F0EBE0', ink: '#1B1A17', acc: '#D97757', clay: '#C15F3C', hi: '#E8A283', mut: '#8A847A' }, proj.palette || {});
     FAMS = Object.assign(FAMS, proj.fonts || {});
+    // 🎨 بنك الستايلات (styles.js): project.style = "paperCut" أو "explainer+keynote" — ألوانه وخطوطه للمحرّك كله، وctx.S للمشاهد
+    S.ST = null;
+    if (proj.style && G.STYLES) {
+      S.ST = G.STYLES.make(proj.style, { W: S.W, H: S.H, fps: S.fps, brand: proj.palette, keepBrand: proj.keepBrand });
+      S.P = Object.assign({}, S.P, S.ST.P, proj.styleOverride || {});
+      FAMS = Object.assign(FAMS, { display: S.ST.fonts.display, body: S.ST.fonts.body, num: S.ST.fonts.num });
+    }
     const tl = S.tl = (await jOpt(PROJ + 'timeline.json')) || {};
     S.bpm = tl.bpm || proj.bpm || 120; S.spb = 60 / S.bpm; S.bpb = tl.beatsPerBar || proj.beatsPerBar || 4;
     await loadFonts((proj.extraFonts || []).map(f => ({ fam: f.family, url: PROJ + f.file, weight: f.weight || '400' })));
@@ -649,6 +769,7 @@ async function boot() {
     await Promise.all(Object.entries(proj.images || {}).map(async ([k, v]) => { S.images[k] = await loadImage(v.startsWith('@logos/') ? '/@logos/' + v.slice(7) : PROJ + v); }));
     // scenes: import each file (scene files call MOTION.scene)
     const list = (tl.scenes && tl.scenes.length ? tl.scenes : proj.scenes) || [];
+    if (proj.stage) await import(PROJ + proj.stage);   // MOTION.stage(...) — قبل المشاهد عشان ctx.win يشتغل بـsetup
     const files = [...new Set(list.map(s => s.file || ('scenes/' + s.id + '.js')))];
     for (const f of files) await import(PROJ + f);   // server sends no-cache headers
     // merge timeline windows with defs
@@ -669,7 +790,9 @@ async function boot() {
     OUT.width = Math.round(S.W * SCALE); OUT.height = Math.round(S.H * SCALE); OX = OUT.getContext('2d');
     // motion-kit shim globals
     G.BG = S.P.bg; G.INK = S.P.ink; G.ACC = S.P.acc; G.CLAY = S.P.clay; G.MUT = S.P.mut; G.FONT = FAMS[proj.mkFont || 'body'] ? `"${FAMS[proj.mkFont || 'body']}"` : '"IBM Plex Sans Arabic"';
-    // setup
+    // setup (الستيج أول)
+    S.stage = null;
+    if (stageDef) { const sg = S.stage = Object.assign(stageDef, { id: stageDef.id || 'stage', start: 0, end: S.dur, dur: S.dur, lines: [] }); sg.ctx = makeCtx(sg); CUR.scene = sg; if (sg.setup) await sg.setup(sg.ctx); }
     for (const sc of S.scenes) { sc.ctx = makeCtx(sc); CUR.scene = sc; if (sc.setup) await sc.setup(sc.ctx); }
     M.info = { W: S.W, H: S.H, fps: S.fps, duration: S.dur, frames: Math.round(S.dur * S.fps), scale: SCALE, bpm: S.bpm, scenes: S.scenes.map(s => ({ id: s.id, start: s.start, end: s.end, transition: s.transition })), gpu: M.gpu || null };
     M.ready = true;
@@ -691,27 +814,59 @@ function visibleWindow(sc, i) {
   const next = S.scenes[i + 1], tout = next && next.transition && Math.abs(next.start - sc.end) < 1e-3 ? (next.transition.dur ?? 0.4) : 0;
   return [sc.start - tin / 2, sc.end + tout / 2];
 }
-function renderFrame(t) {
-  if (!M.ready) throw new Error('engine not ready');
-  OX.setTransform(1, 0, 0, 1, 0, 0); resetCtxState(OX);
-  OX.fillStyle = S.P.bg; OX.fillRect(0, 0, OUT.width, OUT.height);
+function stageWin(t) { const sg = S.stage; if (!sg || !sg.window) return null; return (typeof sg.window === 'function' ? sg.window.call(sg, t, sg.ctx) : sg.window) || null; }
+function drawStage(fn, t, X) { const sg = S.stage; CUR.X = X; CUR.scene = sg; G.X = X; resetCtxState(X); baseT(X); X.save(); fn.call(sg, t, t, sg.ctx); X.restore(); }
+/* composite the visible scenes (pairwise transitions) into target {X, c}; bg = fill the project bg first */
+function compositeScenes(t, target, bg) {
   const vis = []; S.scenes.forEach((sc, i) => { const [a, b] = visibleWindow(sc, i); if (t >= a && t < b) vis.push(sc); });
   if (!vis.length && S.scenes.length) vis.push(t < S.scenes[0].start ? S.scenes[0] : S.scenes[S.scenes.length - 1]);
-  if (vis.length === 1) { drawScene(vis[0], t, OX); }
-  else {
-    // composite pairwise: [A, B] with B's transition
-    let acc = layer(0); drawScene(vis[0], t, acc.X);
-    for (let i = 1; i < vis.length; i++) {
-      const B = vis[i], L = layer(1); drawScene(B, t, L.X);
-      const tr = B.transition || { type: 'cut', dur: 0 }, d = tr.dur ?? 0.4, k = clamp((t - (B.start - d / 2)) / Math.max(d, 1e-6));
-      const fn = typeof tr.type === 'function' ? tr.type : (TR[tr.type] || TR.crossfade);
-      const last = i === vis.length - 1, target = last ? { X: OX, c: OUT } : (acc === layers[2] ? layer(0) : layer(2));
-      target.X.setTransform(1, 0, 0, 1, 0, 0); resetCtxState(target.X);
-      if (last) { OX.fillStyle = S.P.bg; OX.fillRect(0, 0, OUT.width, OUT.height); }
-      fn(target.X, acc.c, L.c, (tr.ease ? (E[tr.ease] || E.linear) : E.linear)(k), tr);
-      acc = target;
-    }
+  if (vis.length === 1) { drawScene(vis[0], t, target.X); return; }
+  let acc = layer(0); drawScene(vis[0], t, acc.X);
+  for (let i = 1; i < vis.length; i++) {
+    const B = vis[i], L = layer(1); drawScene(B, t, L.X);
+    const tr = B.transition || { type: 'cut', dur: 0 }, d = tr.dur ?? 0.4, k = clamp((t - (B.start - d / 2)) / Math.max(d, 1e-6));
+    const fn = typeof tr.type === 'function' ? tr.type : (TR[tr.type] || TR.crossfade);
+    const last = i === vis.length - 1, dst = last ? target : (acc === layers[2] ? layer(0) : layer(2));
+    dst.X.setTransform(1, 0, 0, 1, 0, 0); resetCtxState(dst.X);
+    if (last) { if (bg) { dst.X.fillStyle = S.P.bg; dst.X.fillRect(0, 0, dst.c.width, dst.c.height); } else dst.X.clearRect(0, 0, dst.c.width, dst.c.height); }
+    fn(dst.X, acc.c, L.c, (tr.ease ? (E[tr.ease] || E.linear) : E.linear)(k), tr);
+    acc = dst;
   }
+}
+function renderCore(t) {
+  OX.setTransform(1, 0, 0, 1, 0, 0); resetCtxState(OX);
+  OX.fillStyle = S.P.bg; OX.fillRect(0, 0, OUT.width, OUT.height);
+  const sg = S.stage;
+  if (!sg) return compositeScenes(t, { X: OX, c: OUT }, true);
+  if (sg.under) drawStage(sg.under, t, OX);
+  const win = stageWin(t), C = layer(3);
+  compositeScenes(t, C, false);
+  OX.save(); OX.setTransform(1, 0, 0, 1, 0, 0); resetCtxState(OX);
+  if (win) { OX.beginPath(); OX.roundRect(win.x * SCALE, win.y * SCALE, win.w * SCALE, win.h * SCALE, (win.r || 0) * SCALE); OX.clip(); }
+  OX.drawImage(C.c, 0, 0); OX.restore();
+  if (sg.over) drawStage(sg.over, t, OX);
+}
+/* موشن بلير حقيقي: متوسط عيّنات زمنية داخل الغالق. project.motionBlur = {samples:8, shutter:.5 (180°),
+   ranges:[[a,b],…] ثواني مطلقة, transitions:true (كل انتقال مو cut)} · وبالمشهد: blur:[[lt0,lt1],…] أو blur:true. */
+let ACC = null;
+function blurSamples(t) {
+  const mb = S.proj.motionBlur; if (NOBLUR) return 0;
+  const n = (mb && mb.samples) || 8;
+  if (mb && (mb.ranges || []).some(([a, b]) => t >= a && t < b)) return n;
+  if (mb && mb.transitions) for (const sc of S.scenes) { const tr = sc.transition; if (tr && tr.type !== 'cut') { const d = tr.dur ?? .4; if (t >= sc.start - d / 2 && t < sc.start + d / 2) return n; } }
+  for (const sc of S.scenes) if (sc.blur && t >= sc.start && t < sc.end) { const lt = t - sc.start; if (sc.blur === true || sc.blur.some(([a, b]) => lt >= a && lt < b)) return n; }
+  return 0;
+}
+function renderFrame(t) {
+  if (!M.ready) throw new Error('engine not ready');
+  const n = blurSamples(t);
+  if (n > 1) {
+    if (!ACC) { const c = makeCanvas(OUT.width, OUT.height); let X = null; try { X = c.getContext('2d', { colorType: 'float16' }); } catch (e) { } ACC = { c, X: X || c.getContext('2d') }; }
+    const sh = (S.proj.motionBlur?.shutter ?? .5) / S.fps;
+    ACC.X.setTransform(1, 0, 0, 1, 0, 0); resetCtxState(ACC.X); ACC.X.clearRect(0, 0, ACC.c.width, ACC.c.height);
+    for (let i = 0; i < n; i++) { renderCore(t + sh * ((i + .5) / n - .5)); ACC.X.globalAlpha = 1 / (i + 1); ACC.X.drawImage(OUT, 0, 0); }
+    OX.setTransform(1, 0, 0, 1, 0, 0); resetCtxState(OX); OX.drawImage(ACC.c, 0, 0);
+  } else renderCore(t);
   OX.setTransform(1, 0, 0, 1, 0, 0); resetCtxState(OX);
   const post = S.proj.post || {};
   if (post.vignette) vignette(OX, post.vignette);

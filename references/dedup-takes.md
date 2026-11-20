@@ -1,4 +1,4 @@
-<!-- مرجع لسكل video-ad-editor و AI Video Forge — يُقرأ عند معالجة التسجيلات العفوية والتكرارات -->
+<!-- مرجع لسكل ai-video-forge و AI Video Forge — يُقرأ عند معالجة التسجيلات العفوية والتكرارات -->
 
 # محو التكرارات والبدايات المتعثرة واختيار أفضل تيك (Speech Deduplication Specialist)
 

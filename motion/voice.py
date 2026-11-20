@@ -77,8 +77,7 @@ def split_words(text):
 
 
 _WHISPER = {}
-_DEFAULT_WHISPER_MODEL = r"C:\Users\PC\.cache\whisper\large-v3-turbo.pt"
-def whisper_words(path, model=_DEFAULT_WHISPER_MODEL, lang='ar', prompt=None):
+def whisper_words(path, model='small', lang='ar', prompt=None):
     import whisper  # openai-whisper (installed for python3.9)
     if model not in _WHISPER: _WHISPER[model] = whisper.load_model(model)
     r = _WHISPER[model].transcribe(path, language=lang, word_timestamps=True, fp16=False, initial_prompt=prompt, condition_on_previous_text=False)

@@ -7,8 +7,10 @@
    node render.js <proj> serve                   → مشغّل للمعاينة بالمتصفح (سحب/تشغيل)
    خيارات: --scale 0.5 (مسودة سريعة) · --safe (تراكب المنطقة الآمنة بالمعاينة) · --workers N (صفحات متوازية، افتراضي 2)
            --fps N (تجاوز) · --crf 16 · --no-encode · --q 0.95 · --fresh (يمسح الفريمات القديمة — لازم بعد أي تعديل بالمشاهد)
+           --no-blur (يطفي الموشن بلير — مسودة أسرع)
    ⚠ الاستئناف يتخطّى أي فريم موجود: عدّلت مشهد؟ استخدم --fresh أو range على المقطع المعدّل بعد حذف فريماته. */
 const fs = require('fs'), path = require('path'), http = require('http'), { spawnSync } = require('child_process');
+const { VF_ENCODE } = require('../scripts/_chrome_flags.js');   // 🎨 ألوان مطابقة للأصل (_compat.sh)
 require('./vendor.js')();
 const ROOT = path.resolve(__dirname, '..');                        // video-ad-editor (serves /motion, /scripts)
 const LOGOS = path.resolve(__dirname, '../../hook-assets/logos');
@@ -17,7 +19,7 @@ let puppeteer; try { puppeteer = require('puppeteer-core'); } catch (e) { puppet
 
 const argv = process.argv.slice(2);
 const flag = (n, d) => { const i = argv.indexOf('--' + n); if (i < 0) return d; const v = argv[i + 1]; return v === undefined || v.startsWith('--') ? true : v; };
-const pos = argv.filter((a, i) => !a.startsWith('--') && !(i > 0 && argv[i - 1].startsWith('--') && !['--safe', '--no-encode', '--fresh'].includes(argv[i - 1])));
+const pos = argv.filter((a, i) => !a.startsWith('--') && !(i > 0 && argv[i - 1].startsWith('--') && !['--safe', '--no-encode', '--fresh', '--no-blur'].includes(argv[i - 1])));
 const [projArg, mode = 'preview', ...rest] = pos;
 if (!projArg) { console.log(fs.readFileSync(__filename, 'utf8').split('\n').slice(1, 9).join('\n')); process.exit(1); }
 const PROJ = path.resolve(projArg);
@@ -53,7 +55,7 @@ async function openPage(browser, port, safe) {
   page.on('console', m => { const t = m.text(); if ((m.type() === 'error' || m.type() === 'warning') && !/Failed to load resource/.test(t)) { logs.push(t); console.log('  [page ' + m.type() + '] ' + t); } });
   page.on('pageerror', e => console.log('  [page error] ' + e.message));
   page.on('response', r => { const u = r.url(); if (r.status() >= 400 && !/favicon|timeline\.json/.test(u)) console.log('  [404] ' + u); });
-  await page.goto(`http://127.0.0.1:${port}/motion/engine.html?proj=/proj/&render=1&scale=${SCALE}${safe ? '&safe=1' : ''}`, { waitUntil: 'load' });
+  await page.goto(`http://127.0.0.1:${port}/motion/engine.html?proj=/proj/&render=1&scale=${SCALE}${safe ? '&safe=1' : ''}${flag('no-blur', false) ? '&blur=0' : ''}`, { waitUntil: 'load' });
   await page.waitForFunction('window.MOTION && (MOTION.ready || MOTION.error)', { timeout: 60000 });
   const err = await page.evaluate('MOTION.error');
   if (err) throw new Error('engine boot failed:\n' + err);
@@ -65,7 +67,7 @@ const ffmpeg = args => { const r = spawnSync('ffmpeg', args, { stdio: ['ignore',
 function encode(frameDir, fps, out, startNumber = 0, count = null) {
   const args = ['-y', '-v', 'error', '-stats', '-framerate', String(fps), '-start_number', String(startNumber), '-i', path.join(frameDir, 'f_%06d.jpg')];
   if (count) args.push('-frames:v', String(count));
-  args.push('-vf', 'scale=in_range=full:out_range=tv:out_color_matrix=bt709,format=yuv420p', '-c:v', 'libx264', '-preset', 'slow', '-crf', CRF,
+  args.push('-vf', VF_ENCODE, '-c:v', 'libx264', '-preset', 'slow', '-crf', CRF,
     '-profile:v', 'high', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv', '-r', String(fps), '-movflags', '+faststart', out);
   ffmpeg(args);
 }
@@ -75,7 +77,7 @@ function encode(frameDir, fps, out, startNumber = 0, count = null) {
   if (mode === 'serve') { console.log(`▶ افتح: http://127.0.0.1:${port}/motion/engine.html?proj=/proj/${SAFE ? '&safe=1' : ''}\n  (Ctrl+C للإيقاف)`); return; }
   const browser = await puppeteer.launch({
     executablePath: CHROME, headless: true,
-    args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist', '--enable-unsafe-webgpu', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows', '--force-color-profile=srgb', '--hide-scrollbars', '--mute-audio', '--disable-features=CalculateNativeWinOcclusion'],
+    args: [...require('../scripts/_chrome_flags.js')(), '--enable-unsafe-webgpu', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows', '--force-color-profile=srgb', '--hide-scrollbars', '--mute-audio', '--disable-features=CalculateNativeWinOcclusion'],
   });
   const R = path.join(PROJ, 'renders');
   try {

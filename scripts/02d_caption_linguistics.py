@@ -504,8 +504,11 @@ def chunk_words_smart(words: list, max_words: int = 3, max_chars: int = 24) -> l
         txt = w.get("t", "").strip()
         w_len = len(txt)
 
-        # Break chunk if max words reached or max characters exceeded
-        if current_chunk and (len(current_chunk) >= max_words or (current_chars + w_len) > max_chars):
+        # Break chunk if previous word ends with terminal punctuation or transition marker, or max words/chars exceeded
+        prev_txt = current_chunk[-1].get("t", "").strip() if current_chunk else ""
+        has_break_punct = bool(re.search(r'[!؟?\.…]+$', prev_txt))
+        is_transition = txt in ["أولاً", "ثانياً", "ثالثاً", "أما", "باش"]
+        if current_chunk and (has_break_punct or is_transition or len(current_chunk) >= max_words or (current_chars + w_len) > max_chars):
             chunks.append(current_chunk)
             current_chunk = []
             current_chars = 0

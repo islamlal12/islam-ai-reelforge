@@ -1,0 +1,37 @@
+{
+  "creator": "Islam AI",
+  "verified_at": "2026-11-11",
+  "socials": {
+    "instagram": {
+      "platform": "Instagram",
+      "name": "Islam | Ai Educator",
+      "username": "@your.account",
+      "url": "https://www.instagram.com/your.account/",
+      "cta": "اكتب 'تطبيق' بالتعليقات وأرسل لك الرابط (Keyword Automation)",
+      "badge_label": "Islam | Ai Educator"
+    },
+    "tiktok": {
+      "platform": "TikTok",
+      "name": "Islam | AI Systems Strategist",
+      "username": "@your.account",
+      "url": "https://www.tiktok.com/@your.account",
+      "cta": "الرابط في البايو أو توجه لحساب إنستغرام",
+      "badge_label": "Islam | AI Systems Strategist"
+    },
+    "youtube": {
+      "platform": "YouTube",
+      "name": "العلوي إسلام | Laloui Islam",
+      "username": "your-channel",
+      "url": "https://www.youtube.com/@your-channel",
+      "cta": "اشترك بالقناة وفعّل جرس التنبيهات لرؤية باقي الدروس",
+      "badge_label": "العلوي إسلام | Laloui Islam"
+    }
+  },
+  "brand": {
+    "font": "Readex Pro-Bold",
+    "primary_blue": "#0C68E9",
+    "accent_orange": "#F97316",
+    "text_white": "#FFFFFF",
+    "dark_bg": "#0B0F19"
+  }
+}

@@ -49,11 +49,20 @@
   - DaVinci Resolve Integration Engineer: Direct timeline exporter (`42_davinci_export.py` -> FCPXML v1.8/1.9 + DaVinci API) for seamless color grading and manual tweaking.
   - Lead Orchestrator: Synchronize installed skills, open code review, and publish clean update to GitHub `islam-ai-reelforge`.
 
+- [x] **Milestone 8: Mandatory Pre-Editing Storyboard Approval Gate in Core**
+  - Enforced strict pre-editing storyboard protocol across `SKILL.md`, `references/start.md`, and `reelforge.py`.
+  - Mandatory stop gate requiring complete scene-by-scene storyboard ledger and explicit user approval before performing any cuts, zooms, edits, or final rendering.
+
+- [x] **Milestone 8: Islam AI Account Memory & Viral First-5-Seconds Text Hook Engine**
+  - **Skill Standards & Documentation Specialist:** Created comprehensive reference guide `references/text-hook-guide.md` covering the 5 visual styles matching reference images (`card-white`, `card-orange`, `stacked-badge`, `question-sticker`, `chat-bubble`), 5.0s exact duration, semantic speech alignment, and frame-accurate Whoosh/Pop SFX.
+  - **Islam AI Account Memory Standardization:** Documented and locked permanent cross-platform handles across Instagram (`Islam | Ai Educator` / `@islam.aisystem`), TikTok (`Islam | AI Systems Strategist` / `@islam.ecomsystem`), and YouTube (`العلوي إسلام | Laloui Islam` / `islam-lal-ai`) into `SKILL.md` (Step 0, Step 5, Rule 21, Rule 23).
+  - **Pipeline Protocol Upgrade:** Integrated Text Hook as mandatory step (Step 4.8) in `SKILL.md` with CLI commands (`suggest`, `apply`, `preview`, `render_png`), zero-latency audio sync, and seamless handover to kinetic captions after 5.0 seconds.
+
 ---
 
 ## 📝 Current Trajectory
 
-- **Current Active Step:** Milestone 7 fully verified and integrated. Synchronizing local skills and publishing to GitHub.
+- **Current Active Step:** Milestone 8 documentation, account memory, and text hook guide fully integrated and verified in `SKILL.md`, `references/text-hook-guide.md`, and `PLAN.md`. Ready for cross-team verification and code review.
 
 ---
 
@@ -61,8 +70,9 @@
 
 | Agent | Task | Status | Notes |
 | :--- | :--- | :--- | :--- |
+| **Skill Standards & Documentation Specialist** | Text Hook specification, 5 visual styles guide & account memory integration | ✅ COMPLETED | `references/text-hook-guide.md`, `SKILL.md`, `PLAN.md` |
 | **Audio DSP Specialist** | Pre-Whisper Denoising & `a_clean.wav` mandatory pipeline | ✅ COMPLETED | `02c_denoise.py`, `02_captions.py`, `references/audio-denoise-first.md` |
 | **Speech Deduplication Specialist** | Best-take selection & unscripted repeat removal | ✅ COMPLETED | `01b_dedup.py`, `10_script_edit.py`, `references/dedup-takes.md` |
 | **Smart Caption Engineer** | Smart compact sizing (42-50px) & linguistic accuracy | ✅ COMPLETED | `02d_caption_linguistics.py`, `02_captions.py`, `04_render_frames.js`, `references/smart-captions.md` |
-| **DaVinci Resolve Engineer** | Universal FCPXML v1.8/1.9 timeline generator | ✅ COMPLETED | 42_davinci_export.py, import_to_davinci.py, references/davinci-export.md |
+| **DaVinci Resolve Engineer** | Universal FCPXML v1.8/1.9 timeline generator | ✅ COMPLETED | `42_davinci_export.py`, `import_to_davinci.py`, `references/davinci-export.md` |
 | **Lead Orchestrator** | Code review, skill sync & GitHub release | ✅ COMPLETED | Fully verified & synchronized |

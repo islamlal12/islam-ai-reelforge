@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""قص السكتات + زوم مختلف لكل مقطع + تدرّج دافئ.  python3 03_cut_zoom.py <workdir>"""
+"""قص السكتات + زوم مختلف لكل مقطع + فريمات vfr بألوان مطابقة.  python3 03_cut_zoom.py <workdir> [--frames]"""
 # ── توافق ويندوز/UTF-8 (مضاف) ─────────────────────────────────────
 import sys as _sys, builtins as _bi
 try:
@@ -16,6 +16,21 @@ _bi.open = _utf8_open
 # ──────────────────────────────────────────────────────────────────
 import json, subprocess, sys, os
 W=os.path.abspath(sys.argv[1]); SRC=os.path.join(W,"src.mov")
+# 🎨 فريمات vfr بألوان مطابقة للأصل (12 نوفمبر — ريل «عيون»): الأمر العادي (`-vf fps=30 -q:v 3`) كان يكتب JPEG بمصفوفة bt709
+#    والمتصفح يقراه bt601 ← الأحمر ينقص 3.4 من 255. الحين 03 يطلّعها بنفسه بعد القص بفلتر colorspace (الصيغة بـ_compat.sh ← VF_FRAMES).
+#    فريمات بس بلا إعادة قص (مشروع قديم تبي تصلّح لونه):  python3 03_cut_zoom.py <work> --frames   ثم الرسم --force
+VF_FRAMES, VF_ENCODE = [__import__("re").search(_n + r"='([^']+)'", open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "_compat.sh"), encoding="utf-8").read()).group(1) for _n in ("VF_FRAMES", "VF_ENCODE")]   # 🎨 ألوان مطابقة للأصل — المصدر الواحد _compat.sh
+def _frames():
+    import shutil, glob
+    cz=os.path.join(W,"cutz.mp4"); vfr=os.path.join(W,"vfr")
+    if not os.path.exists(cz): print("❌ ما فيه cutz.mp4 — شغّل القص أول"); return 2
+    shutil.rmtree(vfr,ignore_errors=True); os.makedirs(vfr)
+    rc=subprocess.call(["ffmpeg","-v","error","-nostats","-i",cz,"-vf","fps=30,"+VF_FRAMES,"-q:v","1","-y",os.path.join(vfr,"%05d.jpg")])
+    n=len(glob.glob(os.path.join(vfr,"*.jpg")))
+    if rc==0 and n: print(f"✅ vfr — {n} فريم بألوان مطابقة للأصل")
+    else: print("❌ فشل استخراج الفريمات (vfr)"); rc=rc or 1
+    return rc
+if "--frames" in sys.argv[2:]: sys.exit(_frames())
 _cj=json.load(open(os.path.join(W,"cut.json"))); k=_cj["keep"]; TAIL=float(_cj.get("tail",0) or 0)
 _tp=os.path.join(W,"theme.json")
 _th=json.load(open(_tp)) if os.path.exists(_tp) else {}
@@ -30,21 +45,39 @@ print("الإيقاع:", "هادي (زوم أخف · لا تغيير قبل 4 ث
 p=subprocess.run(["ffprobe","-v","error","-select_streams","v:0","-show_entries",
    "stream=width,height","-of","csv=p=0:s=x",SRC],capture_output=True,text=True).stdout.strip()
 SW,SH=[int(x) for x in p.split("x")[:2]]
-try:
-    _r=subprocess.run(["ffprobe","-v","error","-select_streams","v:0","-show_entries",
-       "stream_side_data=rotation:stream_tags=rotate","-of","csv=p=0",SRC],capture_output=True,text=True).stdout
-    for _l in _r.splitlines():
-        for _val in _l.replace(","," ").split():
-            try:
-                if abs(int(float(_val))) in (90,270): SW,SH=SH,SW; break
-            except Exception: pass
-except Exception: pass
 fc=[];v=[];a=[]
 zi=0; held=0.0; ZS=[]
 for i,(s,e) in enumerate(k):
     # بالوضع الهادي: نفس الزوم يستمر لين تتجمّع 4 ثوانٍ، ثم ينتقل للي بعده
     if i and (not CALM or held>=MINHOLD): zi+=1; held=0.0
     held+=(e-s); ZS.append(Z[zi%len(Z)])
+# 🆕 6.0 (ريل بوبيان): الزوم كان بترتيب المقطع — تشيل/تضيف مقطع فيتزحلق زوم كل اللي بعده وتخرب إحداثيات الرسم.
+#    الحين cut.json ← "zooms" مفتاحه بداية المقطع بثواني الأصل ({"25.05":1.06, …}) — ثابت مهما تغيّر الترتيب.
+#    أول تشغيل يكتبه من الإيقاع ويقفله؛ بعدها: المقطع الموجود ياخذ زومه، والمقطع المقسوم (بداية جديدة) ياخذ زوم المقطع
+#    اللي انقسم منه (أقرب مفتاح قبله داخل مداه)، والجديد كلياً ياخذ الإيقاع. قائمة بنفس طول keep (الطريقة القديمة) تنقبل وتتحوّل.
+#    تبي تغيّر زوم مقطع؟ عدّل رقمه بـcut.json. تبي ترجع للإيقاع؟ شيل "zooms".
+_zk=lambda x: f"{float(x):.2f}"
+_zj=_cj.get("zooms")
+if isinstance(_zj,list) and len(_zj)==len(k): _zj={_zk(sg[0]):float(z) for sg,z in zip(k,_zj)}
+elif isinstance(_zj,list): print(f"⚠️ cut.json ← zooms قائمة طولها {len(_zj)} وkeep {len(k)} — تجاهلتها ورجعت للإيقاع"); _zj=None
+if isinstance(_zj,dict) and _zj:
+    _ks=sorted(_zj, key=float); _src_k=_cj.get("_zsrc",{})   # _zsrc: نهاية كل مقطع وقت القفل — نعرف منه المقطع المقسوم
+    for i,(s,e) in enumerate(k):
+        if _zk(s) in _zj: ZS[i]=float(_zj[_zk(s)]); continue
+        par=[x for x in _ks if float(x)<=s+1e-6 and s<float(_src_k.get(x,float(x)))]   # بداية جديدة داخل مقطع مقفول = جزء منه
+        if par: ZS[i]=float(_zj[par[-1]])
+else: _zj={}
+_merged={**{x:round(float(y),4) for x,y in _zj.items()},**{_zk(s):round(z,4) for (s,e),z in zip(k,ZS)}}
+_msrc={**_cj.get("_zsrc",{}),**{_zk(s):round(e,3) for s,e in k}}
+if _cj.get("zooms")!=_merged or _cj.get("_zsrc")!=_msrc:
+    _cj["zooms"]=_merged; _cj["_zsrc"]=_msrc
+    json.dump(_cj,open(os.path.join(W,"cut.json"),"w"),indent=1,ensure_ascii=False)
+    print(f"🔒 الزوم مقفول لكل مقطع ببداية وقته (cut.json ← zooms، {len(k)} مقطع) — تغيير الترتيب ما يحرّكه")
+print("الزوم لكل مقطع:", " · ".join(f"{s:.2f}→{z:g}" for (s,e),z in zip(k,ZS)))
+for i,(s,e) in enumerate(k):
+    if not (e>s>=0): sys.exit(f"❌ cut.json ← keep[{i}] = [{s}, {e}] — النهاية لازم بعد البداية")
+if any(k[i+1][0]<k[i][0] for i in range(len(k)-1)):
+    print("ℹ️ keep مو بترتيب الوقت — يتركّب بالترتيب المكتوب (مقطع من آخر الكلام قبل اللي قبله مسموح)")
 # 🆕 v3.5 فيديو بالعرض (مقابلة · بودكاست · حلقة): كان يتمطّ لـ9:16 — الحين قصّ بالطول حول الوجه لكل لقطة
 #    (بلاغ ماجد ٢٧ سبتمبر على ريلات المقابلة). الفيديو الطولي يمشي على نفس الطريق القديم بالضبط.
 if SW/SH > 0.62:
@@ -115,4 +148,5 @@ _rc=subprocess.call(["ffmpeg","-v","error","-nostats",*SEEK,"-i",SRC,"-filter_co
 if _rc==0:
     _d=subprocess.run(["ffprobe","-v","error","-show_entries","format=duration","-of","csv=p=0",_OUT],capture_output=True,text=True).stdout.strip()
     print(f"✅ cutz.mp4 — {float(_d or 0):.2f} ث · {len(k)} مقطع")
+    _rc=_frames()
 sys.exit(_rc)

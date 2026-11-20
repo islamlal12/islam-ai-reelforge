@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-import sys
-try:
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-except Exception:
-    pass
-import json, os, subprocess, time, numpy as np
+"""تفريغ حلقة كاملة (بودكاست/مقابلة ساعة) بسرعة ودقة — للاختيار قبل القص. (v3.5، مجرّب 27 سبتمبر على حلقة 53 د)
+الدرس: وِسبر على الملف الطويل مرة وحدة يطيّح نوافذ كاملة ويخترع جملاً («اشتركوا في القناة» · «ترجمة نانسي قنقر»).
+الحل: قطع ~20 ث تنقص عند السكتات، كل قطعة لحالها، ثم الفجوات (>7 ث) تنعاد بقطع 10 ث.
+  ماك M1+ (أسرع ~8×، large-v3-turbo على كرت الشاشة):
+    uv run --python 3.12 --with mlx-whisper --with numpy python 18_long_transcribe.py <فيديو> <مجلد>
+  غيره (أبطأ): python3 18_long_transcribe.py <فيديو> <مجلد>   (openai-whisper، موديل WHISPER_MODEL=turbo افتراضاً)
+يكتب <مجلد>/words.json ([{start,end,text,words:[{w,s,e}]}] بثواني الأصل) و<مجلد>/transcript.txt (دقيقة:ثانية + النص)."""
+import json, os, sys, subprocess, time, numpy as np
 src, out = sys.argv[1], sys.argv[2]; os.makedirs(out, exist_ok=True); SR = 16000
 raw = subprocess.run(["ffmpeg", "-v", "error", "-i", src, "-vn", "-ac", "1", "-ar", str(SR), "-f", "f32le", "-"], capture_output=True).stdout
 x = np.frombuffer(raw, np.float32); dur = len(x) / SR
@@ -17,7 +18,7 @@ try:
     ENG = "mlx turbo"
 except ImportError:
     import whisper
-    _m = whisper.load_model(os.environ.get("WHISPER_MODEL", r"C:\Users\PC\.cache\whisper\large-v3-turbo.pt"))
+    _m = whisper.load_model(os.environ.get("WHISPER_MODEL", "turbo"))
     def tr(seg): return _m.transcribe(seg, language="ar", word_timestamps=True, condition_on_previous_text=False, fp16=False)
     ENG = "openai-whisper"
 hop = SR // 100; db = 20 * np.log10(np.sqrt(np.convolve(x[:len(x)//hop*hop].reshape(-1, hop).var(1) + 1e-12, np.ones(25) / 25, "same")) + 1e-9)
@@ -43,6 +44,6 @@ for a, b in gaps:
     t = a
     while t < b - 1: e = min(t + 10, b + 0.3); res += run(t, e, 1); t = e
 res.sort(key=lambda s: s["start"])
-json.dump(res, open(os.path.join(out, "words.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=2)
-open(os.path.join(out, "transcript.txt"), "w", encoding="utf-8").write("\n".join(f"{int(s['start']//60):02d}:{s['start']%60:04.1f} {s['text']}" for s in res))
+json.dump(res, open(os.path.join(out, "words.json"), "w"), ensure_ascii=False)
+open(os.path.join(out, "transcript.txt"), "w").write("\n".join(f"{int(s['start']//60):02d}:{s['start']%60:04.1f} {s['text']}" for s in res))
 print(f"✅ {ENG} · {dur/60:.0f} د صوت بـ{(time.time()-t0)/60:.1f} د · {len(res)} جملة · فجوات أعيدت: {len(gaps)} → {out}/transcript.txt")

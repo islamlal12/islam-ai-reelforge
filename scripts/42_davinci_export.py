@@ -341,10 +341,12 @@ def find_project_media(work_dir):
             src_audio = cand
             break
             
-    # 3. JSON files
+    # 3. JSON files & B-Roll
     cut_file = work / "cut.json"
     caps_file = work / "caps.json"
     sfx_file = work / "sfx.json"
+    broll_manifest = work / "broll_manifest.json"
+    broll_dir = work / "broll"
 
     return {
         "work_dir": work,
@@ -353,6 +355,8 @@ def find_project_media(work_dir):
         "cut_file": cut_file if cut_file.exists() else None,
         "caps_file": caps_file if caps_file.exists() else None,
         "sfx_file": sfx_file if sfx_file.exists() else None,
+        "broll_manifest": broll_manifest if broll_manifest.exists() else None,
+        "broll_dir": broll_dir,
     }
 
 
@@ -434,6 +438,34 @@ def parse_sfx_events(sfx_data, sfx_dir):
 
     if not sfx_data:
         return events
+
+    # 0) الدعم المباشر لأحداث الموشن المفرزة من 36_motion_mapper.py
+    if "events" in sfx_data and isinstance(sfx_data["events"], list) and len(sfx_data["events"]) > 0:
+        for ev in sfx_data["events"]:
+            t0 = float(ev.get("time_s", ev.get("time", 0.0)))
+            act = ev.get("action", "move")
+            target = ev.get("target", "element")
+            sfx_name = ev.get("sfx", "whoosh_fast")
+            dur = 0.35
+            if act in ("hero_hit", "hero"):
+                dur = 0.75
+            elif act == "riser":
+                dur = 0.50
+            elif act == "click":
+                dur = 0.08
+                
+            wav_name = f"{sfx_name}.wav" if not sfx_name.endswith(".wav") else sfx_name
+            wav_file = sfx_dir / wav_name
+            if not wav_file.exists():
+                wav_file = sfx_dir / "whoosh_up.wav" if (sfx_dir / "whoosh_up.wav").exists() else sfx_dir / wav_name
+
+            events.append({
+                "name": f"{act}_{target}"[:32],
+                "file": str(wav_file),
+                "filename": wav_file.name,
+                "at": round(t0, 3),
+                "dur": round(dur, 3)
+            })
 
     for key, (wav_name, default_dur) in sfx_mapping.items():
         items = sfx_data.get(key, [])
@@ -912,6 +944,340 @@ def export_fcp7_xml(work_dir, cuts, sfx_events, video_path, audio_path, meta, fp
 
 
 # ═════════════════════════════════════════════════════════════════════════════
+# 6b) Faceless Open Timeline Exporters (FCPXML v1.8 & FCP7 XML)
+# ═════════════════════════════════════════════════════════════════════════════
+
+def export_faceless_fcpxml(work_dir, broll_clips, caps, sfx_events, audio_path, total_dur, fps=30.0):
+    """
+    Generates standard FCPXML v1.8 / v1.9 (timeline.fcpxml) for Faceless AI videos:
+    - 9:16 Vertical Resolution (1080x1920)
+    - Primary Spine (V1): Sequence of individual B-Roll video assets (broll_01.mp4, etc.)
+    - Lane -1 (A1): Master Voiceover dialogue audio (audio.wav / a_clean.wav)
+    - Lane -2 (A2): Individual SFX events placed at exact timestamps
+    - Markers: Embedded caption cards on corresponding B-roll clips with colors and notes
+    """
+    fps_int = int(round(fps))
+    format_frame_dur = f"1/{fps_int}s"
+    total_dur_str = time_rational_str(total_dur, fps)
+
+    root = ET.Element("fcpxml", version="1.8")
+    resources = ET.SubElement(root, "resources")
+    ET.SubElement(resources, "format", {
+        "id": "r1",
+        "name": f"FFVideoFormat1080x1920p{fps_int}",
+        "frameDuration": format_frame_dur,
+        "width": "1080",
+        "height": "1920"
+    })
+
+    # Asset: Voiceover Audio
+    audio_dur_str = total_dur_str
+    audio_url = to_file_url(audio_path)
+    ET.SubElement(resources, "asset", {
+        "id": "r_audio",
+        "name": os.path.basename(audio_path),
+        "uid": f"asset_dialogue_{Path(audio_path).stem}",
+        "src": audio_url,
+        "start": "0s",
+        "duration": audio_dur_str,
+        "hasAudio": "1",
+        "audioSources": "1",
+        "audioChannels": "2",
+        "audioRate": "48000"
+    })
+
+    # Register each B-Roll video asset
+    broll_assets = {}
+    for idx, clip in enumerate(broll_clips):
+        fpath = clip["full_path"]
+        fname = Path(fpath).name
+        r_id = f"r_broll_{idx+1}"
+        broll_assets[idx] = r_id
+        clip_dur_str = time_rational_str(max(0.5, clip["dur"]), fps)
+        ET.SubElement(resources, "asset", {
+            "id": r_id,
+            "name": fname,
+            "uid": f"asset_broll_{idx+1}_{Path(fpath).stem}",
+            "src": to_file_url(fpath),
+            "start": "0s",
+            "duration": clip_dur_str,
+            "hasVideo": "1",
+            "format": "r1",
+            "hasAudio": "0"
+        })
+
+    # SFX Assets
+    sfx_assets = {}
+    next_sfx_id = 1
+    for ev in sfx_events:
+        fname = ev["filename"]
+        if fname not in sfx_assets:
+            r_id = f"r_sfx_{next_sfx_id}"
+            next_sfx_id += 1
+            sfx_assets[fname] = r_id
+            ET.SubElement(resources, "asset", {
+                "id": r_id,
+                "name": fname,
+                "uid": f"asset_sfx_{Path(fname).stem}",
+                "src": to_file_url(ev["file"]),
+                "start": "0s",
+                "duration": time_rational_str(max(0.5, ev["dur"] + 0.2), fps),
+                "hasAudio": "1",
+                "audioSources": "1",
+                "audioChannels": "2",
+                "audioRate": "48000"
+            })
+
+    library = ET.SubElement(root, "library")
+    event = ET.SubElement(library, "event", name="Islam AI ReelForge Faceless")
+    project = ET.SubElement(event, "project", name="Faceless Open Timeline")
+    sequence = ET.SubElement(project, "sequence", {
+        "format": "r1",
+        "duration": total_dur_str,
+        "tcStart": "0s",
+        "tcFormat": "NDF"
+    })
+    spine = ET.SubElement(sequence, "spine")
+
+    # Sequence B-Roll Clips in Spine (V1)
+    for idx, clip in enumerate(broll_clips):
+        r_id = broll_assets[idx]
+        clip_start_s = clip["start_t"]
+        clip_dur_s = clip["dur"]
+        clip_end_s = clip_start_s + clip_dur_s
+        q_label = clip.get('query', f'Shot {idx+1}')
+
+        v_clip = ET.SubElement(spine, "asset-clip", {
+            "ref": r_id,
+            "offset": time_rational_str(clip_start_s, fps),
+            "name": f"B-Roll {idx+1:02d}: {q_label}"[:32],
+            "start": "0s",
+            "duration": time_rational_str(clip_dur_s, fps),
+            "format": "r1",
+            "tcFormat": "NDF"
+        })
+
+        # Attach voice audio to the first spine clip (spanning total timeline)
+        if idx == 0:
+            ET.SubElement(v_clip, "asset-clip", {
+                "ref": "r_audio",
+                "lane": "-1",
+                "offset": "0s",
+                "name": "Master Voiceover",
+                "start": "0s",
+                "duration": total_dur_str,
+                "role": "dialogue"
+            })
+
+        # Distribute SFX occurring within this B-roll clip's duration
+        for ev in sfx_events:
+            if clip_start_s <= ev["at"] < clip_end_s:
+                r_sfx = sfx_assets.get(ev["filename"])
+                if r_sfx:
+                    ET.SubElement(v_clip, "asset-clip", {
+                        "ref": r_sfx,
+                        "lane": "-2",
+                        "offset": time_rational_str(ev["at"], fps),
+                        "name": ev["name"],
+                        "start": "0s",
+                        "duration": time_rational_str(ev["dur"], fps),
+                        "role": "effects"
+                    })
+
+        # Distribute markers for captions
+        cards = caps.get("cards", []) if caps else []
+        for card in cards:
+            cs = card.get("s", 0.0)
+            ce = card.get("e", cs + 1.0)
+            if clip_start_s <= cs < clip_end_s:
+                offset_in_clip = cs - clip_start_s
+                words = card.get("w", [])
+                caption_text = " ".join(w.get("t", "") for w in words)
+                hot_words = [w.get("t", "") for w in words if w.get("hot") or w.get("fx")]
+                note = f"🔥 Emphasized: {', '.join(hot_words)}" if hot_words else "Dialogue Caption"
+                ET.SubElement(v_clip, "marker", {
+                    "start": time_rational_str(offset_in_clip, fps),
+                    "duration": time_rational_str(max(0.2, ce - cs), fps),
+                    "value": caption_text or "Caption",
+                    "note": note
+                })
+
+    # Write formatted XML
+    xml_str = ET.tostring(root, encoding="utf-8")
+    try:
+        from xml.dom import minidom
+        reparsed = minidom.parseString(xml_str)
+        pretty_xml = reparsed.toprettyxml(indent="  ", encoding="utf-8").decode("utf-8")
+        if "<!DOCTYPE fcpxml>" not in pretty_xml:
+            lines = pretty_xml.splitlines()
+            if lines[0].startswith("<?xml"):
+                lines.insert(1, "<!DOCTYPE fcpxml>")
+            else:
+                lines.insert(0, "<!DOCTYPE fcpxml>")
+            pretty_xml = "\n".join(lines)
+    except Exception:
+        pretty_xml = xml_str.decode("utf-8")
+
+    out_file = Path(work_dir) / "timeline.fcpxml"
+    with open(out_file, "w", encoding="utf-8") as f:
+        f.write(pretty_xml)
+
+    return out_file
+
+def export_faceless_fcp7_xml(work_dir, broll_clips, sfx_events, audio_path, total_dur, fps=30.0):
+    """
+    Generates standard Final Cut Pro 7 XML (timeline.xml - xmeml v5) for Faceless AI videos
+    with explicit video track (V1 for B-Roll clips), dialogue track (A1), and SFX track (A2).
+    """
+    fps_int = int(round(fps))
+    total_frames = int(round(total_dur * fps))
+
+    root = ET.Element("xmeml", version="5")
+    sequence = ET.SubElement(root, "sequence", id="sequence-1")
+    ET.SubElement(sequence, "name").text = "Faceless ReelForge Timeline"
+    ET.SubElement(sequence, "duration").text = str(total_frames)
+    
+    rate = ET.SubElement(sequence, "rate")
+    ET.SubElement(rate, "timebase").text = str(fps_int)
+    ET.SubElement(rate, "ntsc").text = "FALSE"
+
+    timecode = ET.SubElement(sequence, "timecode")
+    tc_rate = ET.SubElement(timecode, "rate")
+    ET.SubElement(tc_rate, "timebase").text = str(fps_int)
+    ET.SubElement(tc_rate, "ntsc").text = "FALSE"
+    ET.SubElement(timecode, "string").text = "00:00:00:00"
+    ET.SubElement(timecode, "frame").text = "0"
+    ET.SubElement(timecode, "displayformat").text = "NDF"
+
+    media = ET.SubElement(sequence, "media")
+
+    # 1. Video Section (V1 B-Roll Track)
+    video = ET.SubElement(media, "video")
+    v_format = ET.SubElement(video, "format")
+    v_sample = ET.SubElement(v_format, "samplecharacteristics")
+    ET.SubElement(v_sample, "width").text = "1080"
+    ET.SubElement(v_sample, "height").text = "1920"
+    ET.SubElement(v_sample, "pixelaspectratio").text = "square"
+    v_s_rate = ET.SubElement(v_sample, "rate")
+    ET.SubElement(v_s_rate, "timebase").text = str(fps_int)
+    ET.SubElement(v_s_rate, "ntsc").text = "FALSE"
+
+    v_track = ET.SubElement(video, "track")
+
+    # 2. Audio Section (A1 Voice + A2 SFX)
+    audio = ET.SubElement(media, "audio")
+    a_track_dialogue = ET.SubElement(audio, "track")
+    a_track_sfx = ET.SubElement(audio, "track")
+
+    for idx, clip in enumerate(broll_clips):
+        fpath = clip["full_path"]
+        fname = Path(fpath).name
+        dur_f = max(1, int(round(clip["dur"] * fps)))
+        start_f = int(round(clip["start_t"] * fps))
+        end_f = start_f + dur_f
+
+        ci_v = ET.SubElement(v_track, "clipitem", id=f"clipitem-broll-{idx + 1}")
+        ET.SubElement(ci_v, "name").text = f"B-Roll {idx + 1:02d}: {clip.get('query', fname)}"[:32]
+        ET.SubElement(ci_v, "duration").text = str(dur_f)
+        ci_r = ET.SubElement(ci_v, "rate")
+        ET.SubElement(ci_r, "timebase").text = str(fps_int)
+        ET.SubElement(ci_r, "ntsc").text = "FALSE"
+        ET.SubElement(ci_v, "start").text = str(start_f)
+        ET.SubElement(ci_v, "end").text = str(end_f)
+        ET.SubElement(ci_v, "in").text = "0"
+        ET.SubElement(ci_v, "out").text = str(dur_f)
+
+        file_v = ET.SubElement(ci_v, "file", id=f"file-broll-{idx + 1}")
+        ET.SubElement(file_v, "name").text = fname
+        ET.SubElement(file_v, "pathurl").text = to_file_url(fpath)
+        f_r = ET.SubElement(file_v, "rate")
+        ET.SubElement(f_r, "timebase").text = str(fps_int)
+        ET.SubElement(f_r, "ntsc").text = "FALSE"
+        ET.SubElement(file_v, "duration").text = str(dur_f)
+        f_m = ET.SubElement(file_v, "media")
+        f_mv = ET.SubElement(f_m, "video")
+        f_mvs = ET.SubElement(f_mv, "samplecharacteristics")
+        ET.SubElement(f_mvs, "width").text = "1080"
+        ET.SubElement(f_mvs, "height").text = "1920"
+
+    # A1 Dialogue ClipItem (Continuous full-length Voice track)
+    ci_a = ET.SubElement(a_track_dialogue, "clipitem", id="clipitem-a1-voice")
+    ET.SubElement(ci_a, "name").text = "Master Voiceover"
+    ET.SubElement(ci_a, "duration").text = str(total_frames)
+    ci_ar = ET.SubElement(ci_a, "rate")
+    ET.SubElement(ci_ar, "timebase").text = str(fps_int)
+    ET.SubElement(ci_ar, "ntsc").text = "FALSE"
+    ET.SubElement(ci_a, "start").text = "0"
+    ET.SubElement(ci_a, "end").text = str(total_frames)
+    ET.SubElement(ci_a, "in").text = "0"
+    ET.SubElement(ci_a, "out").text = str(total_frames)
+
+    file_a = ET.SubElement(ci_a, "file", id="file-audio-dialogue")
+    ET.SubElement(file_a, "name").text = os.path.basename(audio_path)
+    ET.SubElement(file_a, "pathurl").text = to_file_url(audio_path)
+    fa_r = ET.SubElement(file_a, "rate")
+    ET.SubElement(fa_r, "timebase").text = str(fps_int)
+    ET.SubElement(fa_r, "ntsc").text = "FALSE"
+    ET.SubElement(file_a, "duration").text = str(total_frames)
+    fa_m = ET.SubElement(file_a, "media")
+    fa_ma = ET.SubElement(fa_m, "audio")
+    fa_mas = ET.SubElement(fa_ma, "samplecharacteristics")
+    ET.SubElement(fa_mas, "depth").text = "16"
+    ET.SubElement(fa_mas, "samplerate").text = "48000"
+
+    # A2 SFX ClipItems
+    for s_idx, ev in enumerate(sfx_events):
+        sfx_start_f = int(round(ev["at"] * fps))
+        sfx_dur_f = max(1, int(round(ev["dur"] * fps)))
+        sfx_end_f = sfx_start_f + sfx_dur_f
+
+        ci_sfx = ET.SubElement(a_track_sfx, "clipitem", id=f"clipitem-sfx-{s_idx + 1}")
+        ET.SubElement(ci_sfx, "name").text = ev["name"]
+        ET.SubElement(ci_sfx, "duration").text = str(sfx_dur_f)
+        cs_r = ET.SubElement(ci_sfx, "rate")
+        ET.SubElement(cs_r, "timebase").text = str(fps_int)
+        ET.SubElement(cs_r, "ntsc").text = "FALSE"
+        ET.SubElement(ci_sfx, "start").text = str(sfx_start_f)
+        ET.SubElement(ci_sfx, "end").text = str(sfx_end_f)
+        ET.SubElement(ci_sfx, "in").text = "0"
+        ET.SubElement(ci_sfx, "out").text = str(sfx_dur_f)
+
+        file_sfx = ET.SubElement(ci_sfx, "file", id=f"file-sfx-{Path(ev['filename']).stem}")
+        ET.SubElement(file_sfx, "name").text = ev["filename"]
+        ET.SubElement(file_sfx, "pathurl").text = to_file_url(ev["file"])
+        fs_r = ET.SubElement(file_sfx, "rate")
+        ET.SubElement(fs_r, "timebase").text = str(fps_int)
+        ET.SubElement(fs_r, "ntsc").text = "FALSE"
+        ET.SubElement(file_sfx, "duration").text = str(sfx_dur_f)
+        fs_m = ET.SubElement(file_sfx, "media")
+        fs_ma = ET.SubElement(fs_m, "audio")
+        fs_mas = ET.SubElement(fs_ma, "samplecharacteristics")
+        ET.SubElement(fs_mas, "depth").text = "16"
+        ET.SubElement(fs_mas, "samplerate").text = "48000"
+
+    xml_str = ET.tostring(root, encoding="utf-8")
+    try:
+        from xml.dom import minidom
+        reparsed = minidom.parseString(xml_str)
+        pretty_xml = reparsed.toprettyxml(indent="  ", encoding="utf-8").decode("utf-8")
+        if "<!DOCTYPE xmeml>" not in pretty_xml:
+            lines = pretty_xml.splitlines()
+            if lines[0].startswith("<?xml"):
+                lines.insert(1, "<!DOCTYPE xmeml>")
+            else:
+                lines.insert(0, "<!DOCTYPE xmeml>")
+            pretty_xml = "\n".join(lines)
+    except Exception:
+        pretty_xml = xml_str.decode("utf-8")
+
+    out_file = Path(work_dir) / "timeline.xml"
+    with open(out_file, "w", encoding="utf-8") as f:
+        f.write(pretty_xml)
+
+    return out_file
+
+
+# ═════════════════════════════════════════════════════════════════════════════
 # 7) Subtitles & Markers Exporters (.srt, .edl, .csv)
 # ═════════════════════════════════════════════════════════════════════════════
 
@@ -1235,7 +1601,7 @@ if __name__ == "__main__":
 # 9) Main CLI Execution Routine
 # ═════════════════════════════════════════════════════════════════════════════
 
-def export_davinci_project(work_dir, fps_override=None, auto_import=False):
+def export_davinci_project(work_dir, fps_override=None, auto_import=False, faceless=False):
     """Orchestrates complete DaVinci Resolve timeline and project export."""
     work_dir = Path(work_dir).resolve()
     print("=" * 75)
@@ -1244,6 +1610,140 @@ def export_davinci_project(work_dir, fps_override=None, auto_import=False):
 
     media = find_project_media(work_dir)
 
+    # 1. Detect Faceless Mode vs Talking-Head Mode
+    is_faceless = faceless
+    if not is_faceless:
+        if not media["src_video"]:
+            if media["broll_manifest"] or (media["broll_dir"].exists() and list(media["broll_dir"].glob("*.mp4"))):
+                is_faceless = True
+        elif media["cut_file"]:
+            try:
+                c_data = json.load(open(media["cut_file"], encoding="utf-8"))
+                if c_data.get("source") == "tts_faceless":
+                    is_faceless = True
+            except Exception:
+                pass
+
+    # Load captions
+    caps_data = None
+    if media["caps_file"]:
+        caps_data = json.load(open(media["caps_file"], encoding="utf-8"))
+
+    # Load SFX
+    sfx_data = None
+    if media["sfx_file"]:
+        sfx_data = json.load(open(media["sfx_file"], encoding="utf-8"))
+
+    # Synthesize SFX library into sfx_clips/
+    sfx_dir = work_dir / "sfx_clips"
+    print(f"🔊 Generating broadcast SFX sound library -> {sfx_dir.name}/...")
+    synthesize_sfx_library(sfx_dir)
+    sfx_events = parse_sfx_events(sfx_data, sfx_dir)
+
+    fps = float(fps_override) if fps_override else 30.0
+
+    if is_faceless:
+        print("🎬 Mode Detected: [FACELESS OPEN TIMELINE]")
+        audio_path = media["src_audio"]
+        if not audio_path:
+            for cand in [work_dir / "audio.wav", work_dir / "a_clean.wav", work_dir / "a.wav"]:
+                if cand.exists():
+                    audio_path = cand
+                    break
+        if not audio_path or not audio_path.exists():
+            print(f"❌ Error: Dialogue / Voice audio file not found in {work_dir}")
+            sys.exit(1)
+
+        # Probe Audio duration
+        probe_res = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(audio_path)],
+            capture_output=True, text=True
+        )
+        audio_dur = float(probe_res.stdout.strip()) if probe_res.stdout.strip() else 10.0
+
+        # Collect B-Roll clips
+        broll_clips = []
+        if media["broll_manifest"] and media["broll_manifest"].exists():
+            bm_data = json.load(open(media["broll_manifest"], encoding="utf-8"))
+            for c in bm_data.get("clips", []):
+                fp = Path(c.get("full_path", work_dir / c.get("file", "")))
+                if not fp.exists():
+                    fp = work_dir / "broll" / Path(c.get("file", "")).name
+                if fp.exists():
+                    broll_clips.append({
+                        "full_path": str(fp),
+                        "dur": float(c.get("dur", 3.5)),
+                        "start_t": float(c.get("start_t", 0.0)),
+                        "query": c.get("query", Path(fp).stem)
+                    })
+        
+        if not broll_clips and media["broll_dir"].exists():
+            accum_t = 0.0
+            mp4_files = sorted(list(media["broll_dir"].glob("*.mp4")))
+            for idx, f in enumerate(mp4_files):
+                probe_d = probe_video_stream(f).get("duration", 3.5) or 3.5
+                broll_clips.append({
+                    "full_path": str(f),
+                    "dur": probe_d,
+                    "start_t": accum_t,
+                    "query": f.stem
+                })
+                accum_t += probe_d
+
+        if not broll_clips:
+            print(f"❌ Error: No B-Roll clips found in {work_dir}/broll/ or broll_manifest.json.")
+            sys.exit(1)
+
+        total_dur = max(audio_dur, broll_clips[-1]["start_t"] + broll_clips[-1]["dur"])
+        print(f"📁 Workspace:        {work_dir.name}")
+        print(f"🎙️ Voiceover Audio:  {audio_path.name} ({total_dur:.2f}s)")
+        print(f"🎞️ B-Roll Clips:     {len(broll_clips)} clips on Primary Spine (V1)")
+        print(f"⚡ Sound Effects:    {len(sfx_events)} SFX events on Audio Track 2 (A2)")
+        if caps_data:
+            print(f"💬 Caption Cards:    {len(caps_data.get('cards', []))} cards from caps.json")
+
+        # 2. Export FCPXML v1.8 / v1.9 (Faceless Timeline)
+        print("📝 Generating Faceless FCPXML v1.8/v1.9 timeline...")
+        fcpxml_path = export_faceless_fcpxml(work_dir, broll_clips, caps_data, sfx_events, audio_path, total_dur, fps=fps)
+
+        # 3. Export FCP7 XML
+        print("📝 Generating Faceless FCP7 XML (xmeml v5) companion...")
+        fcp7_path = export_faceless_fcp7_xml(work_dir, broll_clips, sfx_events, audio_path, total_dur, fps=fps)
+
+        # 4. Export Subtitles & Markers (.srt, .edl, .csv)
+        srt_path = export_srt(work_dir, caps_data)
+        edl_path = export_markers_edl(work_dir, caps_data, total_dur, fps=fps)
+        csv_path = export_markers_csv(work_dir, caps_data, total_dur, fps=fps)
+
+        # 5. Generate Standalone Python Script for DaVinci Resolve Studio
+        proj_name = f"ReelForge_Faceless_{work_dir.name.replace(' ', '_')}"
+        script_path = generate_import_script(work_dir, proj_name, fps=fps)
+
+        print("\n" + "=" * 75)
+        print("✅ Faceless DaVinci Resolve Timeline Package Generated Successfully!")
+        print("=" * 75)
+        print(f"📍 FCPXML Timeline (Primary):   {fcpxml_path}")
+        print(f"📍 FCP7 XML (Companion):        {fcp7_path}")
+        print(f"📍 Subtitle Track (.srt):       {srt_path}")
+        print(f"📍 Markers (EDL):               {edl_path}")
+        print(f"📍 Markers (CSV):               {csv_path}")
+        print(f"📍 1-Click Import Script:       {script_path}")
+        print("\n🎯 How to use in DaVinci Resolve:")
+        print("  METHOD 1 (Automatic via Python Scripting API):")
+        print(f"    Open DaVinci Resolve, then run: python \"{script_path}\"")
+        print("  METHOD 2 (Direct GUI Import):")
+        print("    In DaVinci Resolve: File > Import > Timeline > Import AAF, EDL, XML...")
+        print(f"    Select: {fcpxml_path.name}")
+        print("  METHOD 3 (Subtitles & Markers):")
+        print(f"    Drag '{srt_path.name}' onto Subtitle Track, or import '{csv_path.name}' for markers.")
+        print("=" * 75 + "\n")
+
+        if auto_import:
+            print("🚀 Invoking DaVinci Resolve Studio API Importer...")
+            subprocess.run([sys.executable, str(script_path)])
+        return
+
+    # Talking-Head Pipeline
     if not media["cut_file"]:
         print(f"❌ Error: 'cut.json' not found in {work_dir}")
         print("Please run 01_cut_plan.py or reelforge.py first.")
@@ -1259,16 +1759,6 @@ def export_davinci_project(work_dir, fps_override=None, auto_import=False):
     if not cuts:
         print("❌ Error: 'cut.json' contains no keep segments.")
         sys.exit(1)
-
-    # Load captions
-    caps_data = None
-    if media["caps_file"]:
-        caps_data = json.load(open(media["caps_file"], encoding="utf-8"))
-
-    # Load SFX
-    sfx_data = None
-    if media["sfx_file"]:
-        sfx_data = json.load(open(media["sfx_file"], encoding="utf-8"))
 
     # Video & Audio Probing
     meta = probe_video_stream(media["src_video"])
@@ -1352,9 +1842,10 @@ def main():
     parser.add_argument("work_dir", help="Path to project workspace folder containing cut.json")
     parser.add_argument("--fps", type=float, default=None, help="Force specific timeline frame rate (default: auto-detected or 30.0)")
     parser.add_argument("--import", dest="do_import", action="store_true", help="Automatically connect to DaVinci Resolve API if running")
+    parser.add_argument("--faceless", action="store_true", help="Force Faceless B-Roll timeline export")
 
     args = parser.parse_args()
-    export_davinci_project(args.work_dir, fps_override=args.fps, auto_import=args.do_import)
+    export_davinci_project(args.work_dir, fps_override=args.fps, auto_import=args.do_import, faceless=args.faceless)
 
 if __name__ == "__main__":
     main()

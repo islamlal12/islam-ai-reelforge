@@ -24,11 +24,10 @@ def get_whisper_model(requested_model=None):
         return custom_env
 
     # Prioritize permanent high-tier model cache
-    local_pc_turbo = r"large-v3-turbo"
-    local_cache_turbo = os.path.expanduser(r"~/.cache/whisper/large-v3-turbo.pt")
+        local_cache_turbo = os.path.expanduser(r"~/.cache/whisper/large-v3-turbo.pt")
     local_cache_large = os.path.expanduser(r"~/.cache/whisper/large-v3.pt")
 
-    for path in [local_pc_turbo, local_cache_turbo, local_cache_large]:
+    for path in [local_cache_turbo, local_cache_large]:
         if os.path.exists(path):
             return path
 

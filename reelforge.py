@@ -12,6 +12,7 @@ Automates high-retention video editing directly from code:
 - Broadcast audio mastering to -14.0 LUFS
 - Multi-platform exports: Final MP4 + CapCut Project + DaVinci Resolve Timeline (FCPXML)
 - First-frame cover injection (0.1s) respecting the 1080x1080 safe zone
+- MANDATORY GATE: Pre-editing full Storyboard ledger generation & user approval before cutting/rendering
 ===================================================================================
 """
 
@@ -34,17 +35,36 @@ ROOT_DIR = Path(__file__).resolve().parent
 SCRIPTS_DIR = ROOT_DIR / "scripts"
 FONTS_DIR = ROOT_DIR / "motion" / "fonts"
 
-# Universal, modern, neutral default theme (Slate Dark & Sky Blue)
+# Islam AI Brand Theme & Identity (High-retention Orange & Blue with Readex Pro)
 DEFAULT_THEME = {
-    "bg": "#0F172A",       # Deep Slate Dark
-    "ink": "#F8FAFC",      # Crisp White Text
-    "acc": "#38BDF8",      # Sky Blue Accent
-    "clay": "#0284C7",     # Accent Secondary
+    "bg": "#0B0F19",       # Deep Brand Dark (#0B0F19 / #0F172A)
+    "ink": "#FFFFFF",      # Crisp White Text
+    "acc": "#F97316",      # Islam AI Orange Accent
+    "clay": "#0C68E9",     # Islam AI Primary Blue
     "mut": "#94A3B8",      # Muted Subtext
-    "font": "Cairo",       # Universal Arabic Font
+    "font": "Readex Pro",  # Islam AI Brand Font (Readex Pro Bold)
     "capStyle": "card",    # High-contrast modern card caption style
     "grade": False,
     "faceAnchor": 0.30
+}
+
+# Permanent official Islam AI accounts memory
+DEFAULT_SOCIALS = {
+    "instagram": {
+        "name": "Islam | Ai Educator",
+        "handle": "@islam.aisystem",
+        "cta": "اكتب 'تطبيق' بالتعليقات وأرسل لك الرابط"
+    },
+    "tiktok": {
+        "name": "Islam | AI Systems Strategist",
+        "handle": "@islam.ecomsystem",
+        "cta": "الرابط في البايو أو تفضل على إنستغرام"
+    },
+    "youtube": {
+        "name": "العلوي إسلام | Laloui Islam",
+        "handle": "islam-lal-ai",
+        "cta": "اشترك بالقناة وفعّل جرس التنبيهات"
+    }
 }
 
 def banner():
@@ -76,7 +96,7 @@ def check_dependencies():
         return False
     return True
 
-def setup_workdir(video_path, work_dir, theme_override=None):
+def setup_workdir(video_path, work_dir, theme_override=None, platform_choice="all"):
     """Initializes workspace directory and sets up theme & configuration."""
     work = Path(work_dir).resolve()
     work.mkdir(parents=True, exist_ok=True)
@@ -84,6 +104,7 @@ def setup_workdir(video_path, work_dir, theme_override=None):
     # Check if a user profile exists from onboarding
     home_profile = Path.home() / ".video-ad-editor" / "profile.json"
     theme_data = DEFAULT_THEME.copy()
+    socials_data = DEFAULT_SOCIALS.copy()
     
     if home_profile.exists():
         try:
@@ -96,8 +117,23 @@ def setup_workdir(video_path, work_dir, theme_override=None):
                 theme_data["font"] = p["font"]
             if p.get("capStyle") and p["capStyle"] != "auto":
                 theme_data["capStyle"] = p["capStyle"]
+            if p.get("socials"):
+                socials_data.update(p["socials"])
         except Exception:
             pass
+
+    # Embed Islam AI accounts & platform configuration
+    theme_data["socials"] = socials_data
+    theme_data["platform"] = platform_choice
+    
+    plat_key = platform_choice.lower()
+    if plat_key in socials_data:
+        active = socials_data[plat_key]
+    else:
+        active = socials_data.get("instagram", list(socials_data.values())[0])
+    theme_data["active_social"] = active
+    theme_data["handle"] = active["handle"]
+    theme_data["cta"] = active["cta"]
 
     # Copy source video
     src_video = work / "src.mp4"
@@ -161,6 +197,56 @@ def generate_captions(work):
     cmd = [sys.executable, str(caps_script), str(work)]
     subprocess.run(cmd, check=True)
 
+def run_text_hook(work, hook_text=None, style="card-orange", bg="orange"):
+    """
+    Applies viral first-5-seconds text hook engine:
+    1. If hook_text is provided, applies it via scripts/22_hook.py apply.
+    2. If hook_text is None, analyzes speech via 22_hook.py suggest.
+    3. Renders transparent overlay text_hook.png for DaVinci Resolve & CapCut.
+    """
+    hook_script = SCRIPTS_DIR / "22_hook.py"
+    if not hook_script.exists():
+        print("⚠️ 22_hook.py script not found, skipping text hook.")
+        return
+
+    work_path = Path(work).resolve()
+    theme_file = work_path / "theme.json"
+    
+    # Check if hook already exists in theme.json
+    existing_hook = None
+    if theme_file.exists():
+        try:
+            th = json.loads(theme_file.read_text(encoding="utf-8"))
+            existing_hook = th.get("hook")
+        except Exception:
+            pass
+
+    if hook_text:
+        print(f"🪝 Applying viral text hook: '{hook_text}' (Style: {style}, BG: {bg})...")
+        cmd_apply = [
+            sys.executable, str(hook_script), "apply", str(work_path),
+            hook_text,
+            "--style", style,
+            "--bg", bg,
+            "--dur", "5.0"
+        ]
+        subprocess.run(cmd_apply, check=True)
+    elif not existing_hook:
+        print("🪝 Analyzing first 5 seconds of speech to suggest viral text hooks...")
+        cmd_suggest = [sys.executable, str(hook_script), "suggest", str(work_path)]
+        try:
+            subprocess.run(cmd_suggest, check=False)
+        except Exception as e:
+            print(f"⚠️ Text hook suggest note: {e}")
+
+    # Render transparent PNG for NLE timeline overlays
+    print("🎨 Rendering transparent text hook overlay (text_hook.png)...")
+    cmd_render = [sys.executable, str(hook_script), "render_png", str(work_path), "--out", "text_hook.png"]
+    try:
+        subprocess.run(cmd_render, check=True)
+    except Exception as e:
+        print(f"⚠️ Warning: text_hook.png render failed or skipped: {e}")
+
 def apply_zooms_and_cuts(work):
     """Applies dynamic camera cuts and visual pacing zooms."""
     print("🔍 Applying smart cuts & camera zooms...")
@@ -222,6 +308,10 @@ def main():
     parser.add_argument("--denoise-model", default="default", help="Optional DeepFilterNet model checkpoint name/path (default: embedded/cache)")
     parser.add_argument("--capcut", action="store_true", help="Also export as an editable CapCut project")
     parser.add_argument("--davinci", action="store_true", help="Also export as an editable DaVinci Resolve project and timeline")
+    parser.add_argument("--hook", help="Viral text hook string for first 5.0s")
+    parser.add_argument("--hook-style", choices=["card-white", "card-orange", "stacked-badge", "question-sticker", "chat-bubble"], default="card-orange", help="Visual style for text hook card (default: card-orange)")
+    parser.add_argument("--hook-bg", choices=["orange", "white"], default="orange", help="Background color for text hook card (default: orange)")
+    parser.add_argument("--platform", choices=["instagram", "tiktok", "youtube", "all"], default="all", help="Target platform (adjusts CTA and social handles)")
     parser.add_argument("--cover", help="Generate first-frame cover with headline: 'Line 1|*Colored Line 2*'")
     
     args = parser.parse_args()
@@ -235,7 +325,7 @@ def main():
         sys.exit(1)
         
     print(f"🚀 Processing: {args.video}")
-    work, src_video = setup_workdir(args.video, args.work)
+    work, src_video = setup_workdir(args.video, args.work, platform_choice=args.platform)
     
     # Pipeline execution
     extract_audio(src_video, work)
@@ -244,10 +334,25 @@ def main():
     run_silence_cut(work)
     run_transcription(work, model_tier=args.model)
     generate_captions(work)
+    
+    # Run viral text hook right after captions generation
+    run_text_hook(work, hook_text=args.hook, style=args.hook_style, bg=args.hook_bg)
+    
     apply_zooms_and_cuts(work)
     render_motion_frames(work)
     master_final_video(work)
     
+    final_master = work / "ad-master.mp4"
+    if args.cover:
+        cover_script = SCRIPTS_DIR / "28_cover.py"
+        if cover_script.exists():
+            print("🖼️  Generating first-frame cover...")
+            cmd_cover = [sys.executable, str(cover_script), str(work), args.cover, "--first", str(final_master)]
+            try:
+                subprocess.run(cmd_cover, check=False)
+            except Exception as e:
+                print(f"⚠️ Cover generation note: {e}")
+                
     if args.capcut:
         export_capcut(work)
         

@@ -39,7 +39,6 @@ LOGO_EXT = {"image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp", "i
 
 # نفس لوحات الصفحة — لو وصل palette بلا colors نرجع لها
 PALETTES = {
-    "slate-cyan":   dict(bg="#0F172A", ink="#F8FAFC", acc="#38BDF8", clay="#0284C7", mut="#94A3B8"),
     "night-gold":   dict(bg="#101828", ink="#F5F7FA", acc="#F2B33D", clay="#C98B18", mut="#98A2B3"),
     "paper-indigo": dict(bg="#F7F8FC", ink="#111827", acc="#3B5BFD", clay="#2A3FC0", mut="#6B7280"),
     "coal-lime":    dict(bg="#0E0F0C", ink="#F4F4EF", acc="#C6F432", clay="#93B51F", mut="#8C8F85"),
@@ -70,7 +69,7 @@ def split_small(txt):
     return best[1], best[2]
 
 
-CAP_STYLES = {"card", "shadow", "big", "medium", "underline", "bar", "type"}
+CAP_STYLES = {"card", "shadow", "big", "underline", "bar", "type", "chunk"}
 HEX = re.compile(r"^#[0-9A-Fa-f]{6}$")
 
 
@@ -98,11 +97,11 @@ def ensure_previews(moves_dir):
     """ملف البلقن (رفع تطبيق كلود، حد 200 ملف) يحمل المعاينات zip واحد — نفكّه أول مرة."""
     import zipfile
     d, z = moves_dir / "previews", moves_dir / "previews.zip"
-    if z.exists() and not any(d.glob("*.mp4")):
+    if z.exists():                                        # يفك الناقص بس (تحديث البنك يضيف معاينات جديدة لمجلد مفكوك من قبل)
         d.mkdir(parents=True, exist_ok=True)
         with zipfile.ZipFile(z) as f:
             for n in f.namelist():
-                if n.endswith(".mp4") and "/" not in n.strip("/").replace("previews/", "", 1):
+                if n.endswith(".mp4") and "/" not in n.strip("/").replace("previews/", "", 1) and not (d / Path(n).name).exists():
                     (d / Path(n).name).write_bytes(f.read(n))
 
 
@@ -237,18 +236,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
         self.wfile.write(body)
-
-    def do_OPTIONS(self):
-        self.send_response(204)
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
-        self.end_headers()
 
     def do_GET(self):
         u = urlparse(self.path)
@@ -313,12 +302,11 @@ class Handler(BaseHTTPRequestHandler):
         if urlparse(self.path).path != "/api/submit":
             return self._send(404, {"ok": False})
         # صفحة ثانية مفتوحة بالمتصفح ما تقدر ترسل لنا: لازم JSON (يجبر المتصفح على فحص مسبق)
-        # فحص الطلب: التأكد أنه من المتصفح المحلي
+        # والأصل (Origin) لو موجود لازم يكون نفس السيرفر
         ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
-        origin = self.headers.get("Origin") or ""
+        origin = self.headers.get("Origin")
         host = self.headers.get("Host") or ""
-        is_local = (not origin) or ("127.0.0.1" in origin) or ("localhost" in origin) or (origin == "http://" + host)
-        if ctype != "application/json" or not is_local:
+        if ctype != "application/json" or (origin and origin != "http://" + host):
             return self._send(403, {"ok": False, "error": "forbidden"})
         try:
             n = int(self.headers.get("Content-Length") or 0)
@@ -331,8 +319,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(400, {"ok": False, "error": str(e)})
         self._send(200, {"ok": True})
         self.server.result = (obj, paths)
-        if not getattr(self.server, "keep_alive", False):
-            threading.Thread(target=self.server.shutdown, daemon=True).start()
+        threading.Thread(target=self.server.shutdown, daemon=True).start()
 
 
 def serve(args):
@@ -340,8 +327,6 @@ def serve(args):
     port = 0
     do_open = True
     timeout = 1800
-    keep_alive = False
-    mode = None
     i = 0
     while i < len(args):
         a = args[i]
@@ -349,40 +334,31 @@ def serve(args):
             work = args[i + 1]; i += 1
         elif a == "--port":
             port = int(args[i + 1]); i += 1
-        elif a == "--mode":
-            mode = args[i + 1]; i += 1
         elif a == "--no-open":
             do_open = False
         elif a == "--timeout":
             timeout = int(args[i + 1]); i += 1
-        elif a == "--keep-alive":
-            keep_alive = True
         i += 1
     if not PAGE.exists():
         log("⛔ ما لقيت الصفحة:", PAGE)
         return 1
     srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    srv.work, srv.result, srv.keep_alive = work, None, keep_alive
+    srv.work, srv.result = work, None
     url = "http://127.0.0.1:%d/" % srv.server_address[1]
-    if mode:
-        url += "?mode=" + mode
     print("URL: " + url, flush=True)
     if do_open:
         try:
             webbrowser.open(url)
         except Exception:
             pass
-    timer = None
-    if timeout > 0 and not keep_alive:
-        timer = threading.Timer(timeout, srv.shutdown)
-        timer.daemon = True
-        timer.start()
+    timer = threading.Timer(timeout, srv.shutdown)
+    timer.daemon = True
+    timer.start()
     try:
         srv.serve_forever(poll_interval=0.3)
     except KeyboardInterrupt:
         pass
-    if timer:
-        timer.cancel()
+    timer.cancel()
     srv.server_close()
     if not srv.result:
         log("⏱️ خلص الوقت وما وصل شي — المستخدم ما ضغط حفظ.")

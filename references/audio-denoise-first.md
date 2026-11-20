@@ -111,7 +111,7 @@ print(f"Clean audio ready for Whisper: {clean_audio_path}")
 
 ### 3) تفريغ وِسبر بالصوت النظيف (`01b_transcribe.py`)
 ```bash
-python scripts/01b_transcribe.py <workspace> --model "C:\Users\PC\.cache\whisper\large-v3-turbo.pt"
+python scripts/01b_transcribe.py <workspace> --model "large-v3-turbo"
 ```
 *يقوم السكربت تلقائياً بفحص `a_clean.wav`، وإذا لم يجده يبدأ عملية التنظيف الذاتي أولاً قبل مناداة وِسبر.*
 
@@ -126,7 +126,7 @@ python scripts/02_captions.py <workspace>
 ## 5. نموذج وِسبر الدائم (Permanent Whisper Model)
 
 وفق القواعد القياسية، يتم دائماً استخدام المودل المخزن محلياً:
-- **المسار الدائم:** `C:\Users\PC\.cache\whisper\large-v3-turbo.pt`
+- **المسار الدائم:** `large-v3-turbo`
 - **اللغة:** `ar` (العربية).
 - **مستوى التوقيت:** Word-level timestamps مفعلة دائماً بدقة الفريم.
 - **تصفية التلعثم:** إزالة التكرارات المباشرة والبدايات المتعثرة آلياً قبل كتابة `a.json`.

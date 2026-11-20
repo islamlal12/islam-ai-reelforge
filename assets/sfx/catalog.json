@@ -1,0 +1,242 @@
+{
+  "version": "2.0_extended",
+  "total_clips": 26,
+  "source_license": "CC0 1.0 Universal (Public Domain / Commercial Ready)",
+  "curation": "Real SFX Studio Foley Pack (Openverse & AI Video Forge)",
+  "sounds": {
+    "bell_chime": {
+      "file": "bell_chime.wav",
+      "action": "pop",
+      "material": "glass",
+      "description": "Smooth UI notification chime for alerts",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/bell_chime"
+    },
+    "button_click": {
+      "file": "button_click.wav",
+      "action": "click",
+      "material": "tech",
+      "description": "Crisp mechanical button click for UI buttons and toggles",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/button_click"
+    },
+    "camera_shutter": {
+      "file": "camera_shutter.wav",
+      "action": "landing",
+      "material": "tech",
+      "description": "Dual mechanical curtain snap for card landings",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/camera_shutter"
+    },
+    "card_swipe": {
+      "file": "card_swipe.wav",
+      "action": "slide",
+      "material": "paper",
+      "description": "Swift smooth card deck swipe across screen",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/card_swipe"
+    },
+    "coin_clink": {
+      "file": "coin_clink.wav",
+      "action": "pop",
+      "material": "solid_metallic",
+      "description": "Metallic token / credit sound for pricing",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/coin_clink"
+    },
+    "glass_clink": {
+      "file": "glass_clink.wav",
+      "action": "click",
+      "material": "glass",
+      "description": "High crystal glass chime for success states",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/glass_clink"
+    },
+    "glass_tap": {
+      "file": "glass_tap.wav",
+      "action": "click",
+      "material": "glass",
+      "description": "High crystal resonance tap for glass cards and badges",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/glass_tap"
+    },
+    "keyboard_enter": {
+      "file": "keyboard_enter.wav",
+      "action": "landing",
+      "material": "tech",
+      "description": "Heavy mechanical spacebar/enter thud for prompts",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/keyboard_enter"
+    },
+    "keystroke": {
+      "file": "keystroke.wav",
+      "action": "type",
+      "material": "tech",
+      "description": "Tactile switch tick for typewriter and code animations",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/keystroke"
+    },
+    "lock_slide": {
+      "file": "lock_slide.wav",
+      "action": "landing",
+      "material": "solid_metallic",
+      "description": "Precision mechanical bolt slide for privacy badges",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/lock_slide"
+    },
+    "metal_latch": {
+      "file": "metal_latch.wav",
+      "action": "landing",
+      "material": "solid_metallic",
+      "description": "Solid metallic click and lock for comparison sliders",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/metal_latch"
+    },
+    "mouse_click": {
+      "file": "mouse_click.wav",
+      "action": "click",
+      "material": "tech",
+      "description": "Double-action tactile mouse switch for cursor taps",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/mouse_click"
+    },
+    "paper_slide": {
+      "file": "paper_slide.wav",
+      "action": "slide",
+      "material": "paper",
+      "description": "Tactile friction for documents and invoices",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/paper_slide"
+    },
+    "paper_turn": {
+      "file": "paper_turn.wav",
+      "action": "slide",
+      "material": "paper",
+      "description": "Crisp page turn friction for books and slides",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/paper_turn"
+    },
+    "pen_click": {
+      "file": "pen_click.wav",
+      "action": "click",
+      "material": "tech",
+      "description": "Retractable ballpoint pen click for form inputs",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/pen_click"
+    },
+    "pop_bubble": {
+      "file": "pop_bubble.wav",
+      "action": "pop",
+      "material": "tech",
+      "description": "Clean rounded pop for notifications and chat bubbles",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/pop_bubble"
+    },
+    "riser_0.5s": {
+      "file": "riser_0.5s.wav",
+      "action": "riser",
+      "material": "tech",
+      "description": "0.50s clamped exponential riser with instant guillotine cut",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/riser_0.5s"
+    },
+    "riser_subtle": {
+      "file": "riser_subtle.wav",
+      "action": "riser",
+      "material": "air",
+      "description": "Short 0.40s airy riser for micro transitions",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/riser_subtle"
+    },
+    "snap_finger": {
+      "file": "snap_finger.wav",
+      "action": "click",
+      "material": "organic",
+      "description": "Natural sharp snap transient for punchy cuts",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/snap_finger"
+    },
+    "sub_heavy_45": {
+      "file": "sub_heavy_45.wav",
+      "action": "hero_hit",
+      "material": "tech",
+      "description": "Extended 45Hz sub bass rumble for grand reveals",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/sub_heavy_45"
+    },
+    "sub_impact": {
+      "file": "sub_impact.wav",
+      "action": "hero_hit",
+      "material": "tech",
+      "description": "45Hz deep sub boom for hero moments and big slams",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/sub_impact"
+    },
+    "switch_flip": {
+      "file": "switch_flip.wav",
+      "action": "click",
+      "material": "tech",
+      "description": "Crisp tactile toggle switch for dark mode and options",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/switch_flip"
+    },
+    "whoosh_card": {
+      "file": "whoosh_card.wav",
+      "action": "slide",
+      "material": "paper",
+      "description": "Silky air displacement for card entering/exiting",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/whoosh_card"
+    },
+    "whoosh_fast": {
+      "file": "whoosh_fast.wav",
+      "action": "cut",
+      "material": "air",
+      "description": "Rapid whip cut whoosh before major transitions",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/whoosh_fast"
+    },
+    "whoosh_subtle": {
+      "file": "whoosh_subtle.wav",
+      "action": "cut",
+      "material": "air",
+      "description": "Gentle airy breeze transition for soft cuts",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/whoosh_subtle"
+    },
+    "wood_tap": {
+      "file": "wood_tap.wav",
+      "action": "click",
+      "material": "wood",
+      "description": "Warm organic wooden tap for table cards and icons",
+      "license": "CC0 1.0 Universal",
+      "author": "Real SFX Studio / Openverse Free Foley",
+      "source_url": "https://openverse.org/audio/wood_tap"
+    }
+  }
+}
